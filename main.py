@@ -1,6 +1,14 @@
-from agent import *
+from greedy_agent import *
+from monte_carlo_tree_search.tree import *
 
 if __name__ == "__main__":
-    ag = Agent()
-    ag.play(rounds=1000)
-    print(ag.show_values())
+    option = input("tree or greedy: ")
+    if option == "tree":
+        tree = Tree()
+        tree.grow()
+        route = tree.route()
+        print(len(route))
+    else:
+        greedy_agent = Greedy_Agent()
+        greedy_agent.play(rounds=100)
+        print(greedy_agent.show_values())

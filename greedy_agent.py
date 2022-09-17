@@ -1,20 +1,20 @@
+import numpy as np
+
 from maze import *
 
 
-class Agent:
+class Greedy_Agent:
 
     def __init__(self):
         self.states = []
         self.actions = ["up", "down", "left", "right"]
         self.State = State()
-        self.lr = 0.2
+        self.gamma = 0.2
         self.epsilon = 0.3
-
-        # initial state reward
         self.state_values = {}
         for i in range(MAZE_ROWS):
             for j in range(MAZE_COLS):
-                self.state_values[i, j] = 0  # set initial value to 0
+                self.state_values[i, j] = 0
 
     def choose_action(self):
         """epsilon greedy"""
@@ -45,17 +45,17 @@ class Agent:
                 self.state_values[tuple(self.State.state)] = reward
                 print("Game End Reward", reward)
                 for s in reversed(self.states):
-                    reward = self.state_values[tuple(s)] + self.lr * (reward - self.state_values[tuple(s)])
+                    reward = self.state_values[tuple(s)] + self.gamma * (reward - self.state_values[tuple(s)])
                     self.state_values[tuple(s)] = round(reward, 3)
                 self.reset()
                 i += 1
             else:
                 action = self.choose_action()
                 self.states.append(self.State.next_position(action))
-                print("current position {} action {}".format(self.State.state, action))
+                print("current coordination {} action {}".format(self.State.state, action))
                 self.State = self.take_action(action)
                 self.State.is_terminal()
-                print("nxt state", self.State.state)
+                print("next state", self.State.state)
                 print("------------------------------------------")
 
     def show_values(self):
