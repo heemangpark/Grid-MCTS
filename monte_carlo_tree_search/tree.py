@@ -20,7 +20,7 @@ class Tree:
             self.action_sequence.append(action)
             next_state = transition(prev_state, action)
             self.maze = State(next_state)
-            print("took action \"{}\" from {} & now at {}".format(action, prev_state, next_state))
+            # print("took action \"{}\" from {} & now at {}".format(action, prev_state, next_state))
             leaves = expand(node_idx, self.g)
             for leaf in leaves:
                 backup(leaf, self.g, self.maze)
