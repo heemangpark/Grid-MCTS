@@ -23,7 +23,7 @@ class Tree:
             # print("took action \"{}\" from {} & now at {}".format(action, prev_state, next_state))
             leaves = expand(node_idx, self.g)
             for leaf in leaves:
-                backup(leaf, self.g, self.maze)
+                backup(leaf, self.g)
 
     def route(self):
         return self.action_sequence

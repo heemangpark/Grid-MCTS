@@ -3,15 +3,6 @@ import numpy as np
 from config import *
 
 
-def children(idx, graph): return list(graph.successors(idx))
-
-
-def parent(idx, graph): return list(graph.predecessors(idx))[0]
-
-
-def division(up, down): return float("Inf") if down == 0 else up / down
-
-
 def condition(coordinate):
     return False if (coordinate[0] < 0 or coordinate[0] == MAZE_ROWS) or (
             coordinate[1] < 0 or coordinate[1] == MAZE_COLS) else False if coordinate in OBSTACLES_LINE else True
@@ -37,9 +28,27 @@ def transition(state, action):
     return state
 
 
+def reward(coordinate):
+    if coordinate == FROM[0]:
+        return -1
+    elif coordinate in OBSTACLES_LINE:
+        return -5
+    elif (coordinate[0] < 0 or coordinate[0] == MAZE_ROWS) or (coordinate[1] < 0 or coordinate[1] == MAZE_COLS):
+        return -5
+    else:
+        return 0
+
+
+def children(idx, graph): return list(graph.successors(idx))
+
+
+def parent(idx, graph): return list(graph.predecessors(idx))[0]
+
+
 def select(root_idx, graph, c=2):
-    score = [graph.edges[edge_idx]['Q'] + c * np.sqrt(division(graph.nodes[root_idx]['N'], graph.edges[edge_idx]['n']))
-             for edge_idx in list(graph.edges(root_idx))]
+    score = [graph.edges[edge_idx]['Q'] + c * np.sqrt(
+        np.log(1 + graph.nodes[root_idx]['N']) / (1 + graph.edges[edge_idx]['n'])) for edge_idx in
+             list(graph.edges(root_idx))]
     if score[0] == score[1] == score[2] == score[3]:
         best_child = np.random.choice(children(root_idx, graph))
     else:
@@ -64,12 +73,22 @@ def expand(idx, graph, setting='single'):
     return leaves
 
 
-def backup(leaf_idx, graph, state):
+def random_rollout(starts_from, steps):
+    state = starts_from
+    for _ in range(steps):
+        action = np.random.choice(['up', 'down', 'left', 'right'])
+        next_state = transition(state, action)
+        state = next_state
+    return reward(state)
+
+
+def backup(leaf_idx, graph):
     while leaf_idx != 1:
         parent_idx = parent(leaf_idx, graph)
         graph.nodes[parent_idx]['N'] += 1
-        graph.edges[(parent_idx, leaf_idx)]['n'] += 1
-        graph.edges[(parent_idx, leaf_idx)]['Q'] = state.reward()
+        graph.edges[parent_idx, leaf_idx]['n'] += 1
+        ir, sr = reward(graph.nodes[leaf_idx]['state']), random_rollout(graph.nodes[leaf_idx]['state'], 5)
+        graph.edges[parent_idx, leaf_idx]['Q'] = 0.2 * ir + 0.8 * sr
         leaf_idx = parent_idx
 
         if leaf_idx == 1:
