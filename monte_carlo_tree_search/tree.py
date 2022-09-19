@@ -23,7 +23,8 @@ class Tree:
             # print("took action \"{}\" from {} & now at {}".format(action, prev_state, next_state))
             leaves = expand(node_idx, self.g)
             for leaf in leaves:
-                backup(leaf, self.g)
+                sr = reward(random_rollout(self.g.nodes[leaf]['state'], 10))
+                backup(leaf, self.g, sr)
 
     def route(self):
         return self.action_sequence
