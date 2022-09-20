@@ -15,8 +15,8 @@ def vis_route(tree):
     ax.set_xticks([i + .5 for i in range(MAZE_COLS)])
     ax.set_yticks([i + .5 for i in range(MAZE_ROWS)])
 
-    ax.set_xticklabels([int(i+1) for i in range(MAZE_COLS)])
-    ax.set_yticklabels([int(i+1) for i in range(MAZE_ROWS)])
+    ax.set_xticklabels([int(i) for i in range(MAZE_COLS)])
+    ax.set_yticklabels([int(i) for i in range(MAZE_ROWS)])
     ax.set_aspect('equal', adjustable='box')
 
     for i in range(MAZE_ROWS + 1):
@@ -25,13 +25,13 @@ def vis_route(tree):
     for j in range(MAZE_COLS + 1):
         ax.plot([j, j], [0, MAZE_ROWS], 'black')
 
-    plot_seq = seq + 0.5
-    ax.plot(plot_seq[:, ], plot_seq[:, 1], 'red')
+    plot_seq = seq + .5
+    ax.plot(plot_seq[:, 0], plot_seq[:, 1], 'red', alpha=0.5, linewidth=1)
 
     for obs in OBSTACLES_LINE:
         ax.add_patch(
             patches.Rectangle(
-                obs,
+                np.array(obs),
                 1,
                 1,
                 facecolor='red',
@@ -40,7 +40,7 @@ def vis_route(tree):
             ))
     ax.add_patch(
         patches.Rectangle(
-            FROM[0],
+            np.array(FROM[0]),
             1,
             1,
             facecolor='black',
@@ -49,7 +49,7 @@ def vis_route(tree):
 
     ax.add_patch(
         patches.Rectangle(
-            TO,
+            np.array(TO),
             1,
             1,
             facecolor='yellow',
