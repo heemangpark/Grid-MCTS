@@ -79,16 +79,16 @@ def random_rollout(starts_from, steps):
         action = np.random.choice(['up', 'down', 'left', 'right'])
         next_state = transition(state, action)
         state = next_state
-    return reward(state)
+    return state
 
 
-def backup(leaf_idx, graph):
+def backup(leaf_idx, graph, sr):
     while leaf_idx != 1:
         parent_idx = parent(leaf_idx, graph)
         graph.nodes[parent_idx]['N'] += 1
         graph.edges[parent_idx, leaf_idx]['n'] += 1
-        ir, sr = reward(graph.nodes[leaf_idx]['state']), random_rollout(graph.nodes[leaf_idx]['state'], 5)
-        graph.edges[parent_idx, leaf_idx]['Q'] = 0.2 * ir + 0.8 * sr
+        ir = reward(graph.nodes[leaf_idx]['state'])
+        graph.edges[parent_idx, leaf_idx]['Q'] = (ir + sr) / 2
         leaf_idx = parent_idx
 
         if leaf_idx == 1:
