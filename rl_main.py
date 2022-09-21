@@ -10,7 +10,7 @@ env = maze_env()
 
 n_ep = 10000
 
-for e in range(50):
+for e in range(n_ep):
     g, mask = env.reset()
     R = 0
     while True:
@@ -23,7 +23,7 @@ for e in range(50):
         R += r
         if t:
             loss = agent.fit()
-            print('{}th EP, RWD:{}, loss:{}, epsilon:{}'.format(e, R, loss, agent.epsilon))
+            print('{}th EP, RWD:{:5d}, loss:{:05f}, epsilon:{:05f}'.format(e, R, loss, agent.epsilon))
             break
 
 torch.save(agent.state_dict(), 'saved.th')
