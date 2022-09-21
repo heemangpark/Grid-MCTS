@@ -4,10 +4,7 @@ import matplotlib.pyplot as plt
 from config import *
 
 
-def vis_route(tree):
-    maze = tree.maze
-    seq = tree.state_sequence
-
+def vis_route(maze, seq):
     seq = np.array(seq)
 
     fig, ax = plt.subplots()
