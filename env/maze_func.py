@@ -1,5 +1,5 @@
 import numpy as np
-from config import TO
+from config import GOAL
 
 UP = 0
 DOWN = 1
@@ -8,7 +8,7 @@ RIGHT = 3
 move = np.array([[0, 1], [0, -1], [-1, 0], [1, 0]])
 
 
-def avail_action(maze, loc):
+def get_avail_action(maze, loc):
     temp_avail_actions = []
     map_x, map_y = maze.shape
     if loc[1] != map_y - 1:
@@ -34,4 +34,4 @@ def transition_loc(loc, action):
 
 
 def terminated(maze, loc):
-    return maze[tuple(loc)] == TO
+    return maze[tuple(loc)] == GOAL
