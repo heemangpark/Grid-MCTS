@@ -18,7 +18,8 @@ def parent(idx, graph): return list(graph.predecessors(idx))[0]
 
 def select(root_idx, graph, c=2):
     score = [
-        (graph.edges[edge_idx]['Q']) + c * np.sqrt(np.log(graph.nodes[root_idx]['N']) / graph.edges[edge_idx]['n'] + 1)
+        (graph.edges[edge_idx]['Q']) + c * np.sqrt(
+            np.log(graph.nodes[root_idx]['N'] + 1e-4) / (graph.edges[edge_idx]['n'] + 1))
         for edge_idx in list(graph.edges(root_idx))]
     if np.var(score) == 0:
         best_child = np.random.choice(children(root_idx, graph))
