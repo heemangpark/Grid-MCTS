@@ -1,5 +1,7 @@
 import dgl
 import numpy as np
+import torch
+from copy import copy
 
 EMPTY = 0
 OBSTACLE = 1
@@ -21,8 +23,11 @@ class maze_env:
         self.maze = None
         self.base_graph = None
         self.time_limit = 100
+        self.t = 0
 
     def reset(self):
+        self.t = 0
+
         maze = np.zeros((self.grid, self.grid))
         obstacle = np.random.random((self.grid, self.grid)) < self.obs_factor
         maze[obstacle] = OBSTACLE
@@ -32,24 +37,24 @@ class maze_env:
 
         rand_loc = np.random.choice(10, 4)
         if all(rand_loc[:2] == rand_loc[-2:]):
-            while rand_loc[:2] != rand_loc[-2:]:
+            while not all(rand_loc[:2] == rand_loc[-2:]):
                 rand_loc = np.random.choice(10, 4)
 
         ag_loc = rand_loc[:2]
-        goal_loc = rand_loc[-2]
+        goal_loc = rand_loc[-2:]
 
         maze[tuple(goal_loc)] = GOAL
         self.maze = maze
         self.base_graph = self.generate_base_graph(maze)
 
         self.ag_loc = ag_loc
-        state = self.maze
+        state = copy(self.maze)
         state[tuple(ag_loc)] = AG
 
-        return state, self.get_avail_action(state)
+        return self.convert_maze_to_g(state), self.mask(state)
 
     def mask(self, maze):
-        ag_loc = maze.argmax()
+        ag_loc = self.ag_loc
         mask = []
         for a in [UP, DOWN, LEFT, RIGHT]:
             m = True
@@ -59,11 +64,12 @@ class maze_env:
                     m = False
 
             mask.append(m)
-        return mask
+        return torch.tensor(mask).reshape(1, -1)
 
     def step(self, action):
+        self.t += 1
         self.ag_loc = self.ag_loc + move[action]
-        state = self.maze
+        state = copy(self.maze)
 
         terminated = False
         reward = -1
@@ -74,8 +80,10 @@ class maze_env:
             state[tuple(self.ag_loc)] = AG
 
         g = self.convert_maze_to_g(state, self.base_graph)
+        if self.t > self.time_limit:
+            terminated = True
 
-        return g, reward, self.get_avail_action(state), terminated
+        return g, reward, self.mask(state), terminated
 
     def generate_base_graph(self, maze):
         g = dgl.DGLGraph()
@@ -96,6 +104,7 @@ class maze_env:
         if g is None:
             g = self.generate_base_graph(maze)
 
-        g.ndata['feature'] = maze.reshape(-1, 1)
+        g.ndata['type'] = torch.Tensor(maze.reshape(-1, 1))
+        g.ndata['init_nf'] = torch.eye(4)[maze.reshape(-1)]
 
         return g

@@ -15,7 +15,7 @@ class GNN(nn.Module):
 
     def forward(self, g, nf):
         for l in self.layers:
-            nf, g = l(g, nf)
+            nf = l(g, nf)
 
         return nf
 
@@ -30,16 +30,16 @@ class GNNLayer(nn.Module):
 
     def forward(self, g: dgl.DGLGraph, nf):
         g.ndata['nf'] = nf
-        g.update_all(self.message_func, self.reduce_func, self.apply_node_func)
+        g.update_all(self.message_func, self.reduce_func, self.apply_func)
 
-        g.ndata.pop('agg')
-        g.edges.pop('msg')
+        # g.ndata.pop('agg')
+        # g.edata.pop('msg')
         nf_out = g.ndata.pop('nf_out')
         return nf_out
 
     def message_func(self, edges):
-        src_nf = edges.src.data['nf']
-        dst_nf = edges.dst.data['nf']
+        src_nf = edges.src['nf']
+        dst_nf = edges.dst['nf']
 
         ef_in = torch.concat([src_nf, dst_nf], -1)
         msg = self.edge_update(ef_in)
@@ -53,4 +53,4 @@ class GNNLayer(nn.Module):
     def apply_func(self, nodes):
         nf_in = nodes.data['agg']
         nf_out = self.node_update(nf_in)
-        return {'nf_updated': nf_out}
+        return {'nf_out': nf_out}
