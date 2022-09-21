@@ -1,7 +1,7 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from config import *
 import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+
+from config import *
 
 
 def vis_route(tree):
@@ -28,10 +28,12 @@ def vis_route(tree):
     plot_seq = seq + .5
     ax.plot(plot_seq[:, 0], plot_seq[:, 1], 'red', alpha=0.5, linewidth=1)
 
-    for obs in OBSTACLES_LINE:
+    o_x, o_y = maze.nonzero()
+
+    for i, j in zip(o_x, o_y):
         ax.add_patch(
             patches.Rectangle(
-                np.array(obs),
+                [i, j],
                 1,
                 1,
                 facecolor='red',
@@ -56,4 +58,4 @@ def vis_route(tree):
             fill=True
         ))
 
-    plt.show()
+    fig.savefig('res.png')

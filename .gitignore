@@ -1,5 +1,6 @@
-*.ppt
-*.pptx
 .git/
 .idea/
 __pycache__/
+
+*.pkl
+*.nx

@@ -1,15 +1,19 @@
-from utils.vis_util import vis_route
-from greedy_agent import *
+import pickle
+import time
+
+from config import maze, FROM
 from monte_carlo_tree_search.tree import *
+from utils.vis_util import vis_route
 
 if __name__ == "__main__":
-    tree = Tree()
-    tree.grow()
-    route = tree.route()
-    print(tree.state_sequence)
-    vis_route(tree)
+    for trial in range(1):
+        start = int(time.time())
+        tree = Tree(maze, init_locs=FROM)
+        vis_route(tree)
+        tree.grow()
+        route = tree.route()
 
-    """greedy"""
-    greedy_agent = Greedy_Agent()
-    # greedy_agent.play(rounds=100)
-    # print(greedy_agent.show_values())
+        vis_route(tree)
+        nx.write_gpickle(tree, "tree_{}_{}.nx".format(trial, int(time.time()) - start))
+        with open('route_{}_{}.pkl'.format(trial, len(route)), 'wb') as f:
+            pickle.dump(route, f)
