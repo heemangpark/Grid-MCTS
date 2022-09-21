@@ -51,6 +51,10 @@ class maze_env:
         state = copy(self.maze)
         state[tuple(ag_loc)] = AG
 
+        mask = self.mask(state)
+        if mask.sum() == 4:
+            self.reset()
+
         return self.convert_maze_to_g(state), self.mask(state)
 
     def mask(self, maze):
@@ -83,7 +87,9 @@ class maze_env:
         if self.t > self.time_limit:
             terminated = True
 
-        return g, reward, self.mask(state), terminated
+        mask = self.mask(state)
+
+        return g, reward, mask, terminated
 
     def generate_base_graph(self, maze):
         g = dgl.DGLGraph()

@@ -26,4 +26,4 @@ for e in range(n_ep):
             print('{}th EP, RWD:{:5d}, loss:{:05f}, epsilon:{:05f}'.format(e, R, loss, agent.epsilon))
             break
 
-torch.save(agent.state_dict(), 'saved.th')
+torch.save(agent.state_dict(), 'saved_1.th')
