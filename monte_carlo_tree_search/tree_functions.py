@@ -1,6 +1,7 @@
 import numpy as np
-from env.maze_func import transition_loc, terminated
+
 from config import TO
+from env.maze_func import transition_loc
 
 
 def distance_score(loc1, loc2):
