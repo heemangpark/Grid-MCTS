@@ -14,7 +14,7 @@ if __name__ == "__main__":
         route = tree.route()
 
         vis_route(tree)
-        nx.write_gpickle(tree, "tree_{}_{}".format(trial, int(time.time()) - start))
+        nx.write_gpickle(tree, "tree_{}_{}.nx".format(trial, int(time.time()) - start))
         with open('route_{}_{}.pkl'.format(trial, len(route)), 'wb') as f:
             pickle.dump(route, f)
 
