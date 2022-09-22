@@ -11,7 +11,7 @@ class QAgent(nn.Module):
     def __init__(self, in_dim, embedding_dim):
         super(QAgent, self).__init__()
 
-        self.gnn = GNN(in_dim, out_dim=embedding_dim)
+        self.gnn = GNN(in_dim, out_dim=embedding_dim, n_layers=10)
         self.qfunc = nn.Sequential(nn.Linear(embedding_dim, 4))
 
         self.gnn_target = GNN(in_dim, out_dim=embedding_dim)
@@ -40,10 +40,12 @@ class QAgent(nn.Module):
 
             if torch.rand(1) < self.epsilon:
                 action = random_q.argmax(-1)
+                self.q = random_q
             else:
                 action = q.argmax(-1)
+                self.q = q
 
-            self.epsilon = max(0.05, self.epsilon - 0.00001)
+            self.epsilon = max(0.05, self.epsilon - 0.00005)
 
         return action.item()
 

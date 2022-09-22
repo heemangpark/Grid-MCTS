@@ -12,42 +12,46 @@ UP = 0
 DOWN = 1
 LEFT = 2
 RIGHT = 3
-move = np.array([[0, 1], [0, -1], [-1, 0], [1, 0]])
+move = np.array([[-1, 0], [1, 0], [0, -1], [0, 1]])
 
 
 class maze_env:
-    def __init__(self, grid=10, obs_factor=.2):
+    def __init__(self, grid=10, obstacle_ratio=.2, time_limit=50):
         self.grid = grid
-        self.obs_factor = obs_factor
+        self.obstacle_ratio = obstacle_ratio
         self.ag_loc = None
+        self.goal_loc = None
         self.maze = None
         self.base_graph = None
-        self.time_limit = 100
+        self.time_limit = time_limit
         self.t = 0
 
     def reset(self):
         self.t = 0
 
         maze = np.zeros((self.grid, self.grid))
-        obstacle = np.random.random((self.grid, self.grid)) < self.obs_factor
+        obstacle = np.random.random((self.grid, self.grid)) < self.obstacle_ratio
         maze[obstacle] = OBSTACLE
 
-        goal_loc = np.random.choice(10, 2, replace=False)
+        goal_loc = np.random.choice(self.grid, 2, replace=False)
         maze[tuple(goal_loc)] = GOAL
 
-        rand_loc = np.random.choice(10, 4)
+        rand_loc = np.random.choice(self.grid, 4)
         if all(rand_loc[:2] == rand_loc[-2:]):
             while not all(rand_loc[:2] == rand_loc[-2:]):
                 rand_loc = np.random.choice(10, 4)
 
         ag_loc = rand_loc[:2]
         goal_loc = rand_loc[-2:]
+        self.ag_init_loc = ag_loc
+        self.ag_loc = ag_loc
+        self.goal_loc = goal_loc
 
         maze[tuple(goal_loc)] = GOAL
+        maze[tuple(ag_loc)] = 0
         self.maze = maze
         self.base_graph = self.generate_base_graph(maze)
 
-        self.ag_loc = ag_loc
         state = copy(self.maze)
         state[tuple(ag_loc)] = AG
 
@@ -72,6 +76,8 @@ class maze_env:
 
     def step(self, action):
         self.t += 1
+
+        # transition
         self.ag_loc = self.ag_loc + move[action]
         state = copy(self.maze)
 
@@ -81,9 +87,11 @@ class maze_env:
             terminated = True
             reward = 10
         else:
+            if np.abs(self.goal_loc - self.ag_loc).sum() < 4:
+                reward = 0
             state[tuple(self.ag_loc)] = AG
 
-        g = self.convert_maze_to_g(state, self.base_graph)
+        g = self.convert_maze_to_g(state)
         if self.t > self.time_limit:
             terminated = True
 
@@ -97,20 +105,24 @@ class maze_env:
         n_col = maze.shape[-1]
         g.add_nodes(n_row * n_col)
 
-        vertical_from = np.arange(n_row * n_col - n_row)
-        vertical_to = vertical_from + n_row
+        vertical_from = np.arange(n_row * n_col).reshape(n_row, -1)[:-1]
+        vertical_from = vertical_from.reshape(-1)
+        vertical_to = vertical_from + self.grid
         g.add_edges(vertical_from, vertical_to)
+        g.add_edges(vertical_to, vertical_from)
 
-        horizontal_from = np.arange(n_row * n_col)[:-1].reshape(-1)
+        horizontal_from = np.arange(n_row * n_col).reshape(n_row, -1)[:, :-1]
+        horizontal_from = horizontal_from.reshape(-1)
         horizontal_to = horizontal_from + 1
         g.add_edges(horizontal_from, horizontal_to)
+        g.add_edges(horizontal_to, horizontal_from)
+
+        g.add_edges(range(n_row * n_col), range(n_row * n_col))
         return g
 
-    def convert_maze_to_g(self, maze, g=None):
-        if g is None:
-            g = self.generate_base_graph(maze)
-
-        g.ndata['type'] = torch.Tensor(maze.reshape(-1, 1))
-        g.ndata['init_nf'] = torch.eye(4)[maze.reshape(-1)]
+    def convert_maze_to_g(self, state):
+        g = copy(self.base_graph)
+        g.ndata['type'] = torch.Tensor(state.reshape(-1, 1))
+        g.ndata['init_nf'] = torch.eye(4)[state.reshape(-1)]
 
         return g
