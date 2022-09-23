@@ -35,7 +35,7 @@ class maze_env:
         for a in list(self.args.action_type.values()):
             m = True
             temp_next_loc = ag_loc + self.args.actions[a]
-            if 0 <= temp_next_loc[0] < self.args.maze_x and 0 <= temp_next_loc[1] < self.args.maze_x:
+            if (0 <= temp_next_loc[0] < self.args.maze_x) and (0 <= temp_next_loc[1] < self.args.maze_y):
                 next_loc = temp_next_loc
             else:
                 next_loc = ag_loc
@@ -47,10 +47,15 @@ class maze_env:
     def step(self, action):
         self.t += 1
 
-        # transition
-        self.ag_loc = self.ag_loc + self.args.actions[action]
-        state = copy(self.maze)
+        """transition"""
+        temp_next_loc = self.ag_loc + self.args.actions[action]
+        if (0 <= temp_next_loc[0] < self.args.maze_x) and (0 <= temp_next_loc[1] < self.args.maze_y):
+            self.ag_loc = temp_next_loc
+        else:
+            pass
+        # self.ag_loc = self.ag_loc + self.args.actions[action]
 
+        state = copy(self.maze)
         terminated = False
         reward = -1
         if state[tuple(self.ag_loc)] == self.args.cell_type['goal']:
@@ -59,6 +64,8 @@ class maze_env:
         else:
             if np.abs(self.goal_loc - self.ag_loc).sum() < 4:
                 reward = 0
+            else:
+                pass
             state[tuple(self.ag_loc)] = self.args.cell_type['agent']
 
         g = self.convert_maze_to_g(state)

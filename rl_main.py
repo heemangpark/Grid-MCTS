@@ -1,6 +1,6 @@
 import torch
-import wandb
 
+import wandb
 from env.maze_env import maze_env
 from rl.qagent import QAgent
 from utils.arguments import get_random_maze_args
