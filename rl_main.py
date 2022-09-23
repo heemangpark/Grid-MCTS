@@ -30,7 +30,7 @@ for e in range(n_ep):
             loss = agent.fit()
             print('EP {}, {} timesteps,  RWD:{:4d}, loss:{:04f}, epsilon:{:05f}'
                   .format(e, ep_len, R, loss, agent.epsilon))
-            wandb.log({"loss": loss, "accum_reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': ep_len})
+            wandb.log({"loss": loss, "accum_reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': e})
             break
 
     if e % 1000 == 0 and e > 1:
