@@ -1,5 +1,4 @@
 import numpy as np
-from config import GOAL
 
 UP = 0
 DOWN = 1
@@ -33,5 +32,5 @@ def transition_loc(loc, action):
     return loc + move[action]
 
 
-def terminated(maze, loc):
-    return maze[tuple(loc)] == GOAL
+def terminated(args, loc):
+    return tuple(loc) == tuple(args.goal)

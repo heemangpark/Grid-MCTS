@@ -1,8 +1,7 @@
-.git/
 .idea/
 __pycache__/
-
-*.pkl
-*.nx
-*.th
+saved/
+tree/
 wandb/
+
+*.png

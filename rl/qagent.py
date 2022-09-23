@@ -1,10 +1,11 @@
+from math import inf
+
 import dgl
 import torch
 import torch.nn as nn
 
 from rl.gnn import GNN
 from rl.replaymemory import ReplayMemory
-from math import inf
 
 
 class QAgent(nn.Module):

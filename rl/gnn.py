@@ -1,6 +1,6 @@
+import dgl
 import torch
 import torch.nn as nn
-import dgl
 
 
 class GNN(nn.Module):

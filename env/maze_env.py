@@ -1,59 +1,28 @@
+from copy import copy
+
 import dgl
 import numpy as np
 import torch
-from copy import copy
 
-EMPTY = 0
-OBSTACLE = 1
-GOAL = 2
-AG = 3
-
-UP = 0
-DOWN = 1
-LEFT = 2
-RIGHT = 3
-move = np.array([[-1, 0], [1, 0], [0, -1], [0, 1]])
+from utils.create_maze import create_randomly
 
 
 class maze_env:
-    def __init__(self, grid=10, obstacle_ratio=.2, time_limit=50):
-        self.grid = grid
-        self.obstacle_ratio = obstacle_ratio
-        self.ag_loc = None
-        self.goal_loc = None
-        self.maze = None
-        self.base_graph = None
-        self.time_limit = time_limit
+    def __init__(self, args, time_limit):
         self.t = 0
+        self.time_limit = time_limit
+        self.init_loc, self.ag_loc, self.goal_loc = None, None, None
+        self.maze, self.base_graph = None, None
+        self.args = args
 
     def reset(self):
         self.t = 0
-
-        maze = np.zeros((self.grid, self.grid))
-        obstacle = np.random.random((self.grid, self.grid)) < self.obstacle_ratio
-        maze[obstacle] = OBSTACLE
-
-        goal_loc = np.random.choice(self.grid, 2, replace=False)
-        maze[tuple(goal_loc)] = GOAL
-
-        rand_loc = np.random.choice(self.grid, 4)
-        if all(rand_loc[:2] == rand_loc[-2:]):
-            while not all(rand_loc[:2] == rand_loc[-2:]):
-                rand_loc = np.random.choice(10, 4)
-
-        ag_loc = rand_loc[:2]
-        goal_loc = rand_loc[-2:]
-        self.ag_init_loc = ag_loc
-        self.ag_loc = ag_loc
-        self.goal_loc = goal_loc
-
-        maze[tuple(goal_loc)] = GOAL
-        maze[tuple(ag_loc)] = 0
-        self.maze = maze
-        self.base_graph = self.generate_base_graph(maze)
+        start_loc, self.goal_loc, self.maze = create_randomly(self.args)
+        self.init_loc, self.ag_loc = start_loc, start_loc
+        self.base_graph = self.generate_base_graph(self.maze)
 
         state = copy(self.maze)
-        state[tuple(ag_loc)] = AG
+        state[tuple(self.ag_loc)] = self.args.cell_type['agent']
 
         mask = self.mask(state)
         if mask.sum() == 4:
@@ -62,15 +31,16 @@ class maze_env:
         return self.convert_maze_to_g(state), self.mask(state)
 
     def mask(self, maze):
-        ag_loc = self.ag_loc
-        mask = []
-        for a in [UP, DOWN, LEFT, RIGHT]:
+        ag_loc, mask = self.ag_loc, []
+        for a in list(self.args.action_type.values()):
             m = True
-            if all(ag_loc + move[a] >= 0) and all(ag_loc + move[a] < self.grid):
-                next_loc = ag_loc + move[a]
-                if maze[tuple(next_loc)] == 0 or maze[tuple(next_loc)] == 2:
-                    m = False
-
+            temp_next_loc = ag_loc + self.args.actions[a]
+            if 0 <= temp_next_loc[0] < self.args.maze_x and 0 <= temp_next_loc[1] < self.args.maze_x:
+                next_loc = temp_next_loc
+            else:
+                next_loc = ag_loc
+            if maze[tuple(next_loc)] == self.args.cell_type['empty'] or self.args.cell_type['goal']:
+                m = False
             mask.append(m)
         return torch.tensor(mask).reshape(1, -1)
 
@@ -78,18 +48,18 @@ class maze_env:
         self.t += 1
 
         # transition
-        self.ag_loc = self.ag_loc + move[action]
+        self.ag_loc = self.ag_loc + self.args.actions[action]
         state = copy(self.maze)
 
         terminated = False
         reward = -1
-        if state[tuple(self.ag_loc)] == GOAL:
+        if state[tuple(self.ag_loc)] == self.args.cell_type['goal']:
             terminated = True
             reward = 10
         else:
             if np.abs(self.goal_loc - self.ag_loc).sum() < 4:
                 reward = 0
-            state[tuple(self.ag_loc)] = AG
+            state[tuple(self.ag_loc)] = self.args.cell_type['agent']
 
         g = self.convert_maze_to_g(state)
         if self.t > self.time_limit:
@@ -107,7 +77,7 @@ class maze_env:
 
         vertical_from = np.arange(n_row * n_col).reshape(n_row, -1)[:-1]
         vertical_from = vertical_from.reshape(-1)
-        vertical_to = vertical_from + self.grid
+        vertical_to = vertical_from + self.args.maze_x
         g.add_edges(vertical_from, vertical_to)
         g.add_edges(vertical_to, vertical_from)
 
@@ -124,5 +94,4 @@ class maze_env:
         g = copy(self.base_graph)
         g.ndata['type'] = torch.Tensor(state.reshape(-1, 1))
         g.ndata['init_nf'] = torch.eye(4)[state.reshape(-1)]
-
         return g
