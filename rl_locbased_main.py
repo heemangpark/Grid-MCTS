@@ -5,12 +5,17 @@ from env.maze_env import maze_env
 from rl.qagent_loc import QAgent
 from utils.arguments import get_random_maze_args
 
-# wandb.init(project="etri", entity="curie_ahn")
 # wandb.init(project='IoT', entity='heemang')
+
+args = get_random_maze_args()
+args.maze_x = 5
+args.maze_y = 5
+wandb.init(project="etri", entity="curie_ahn", config=args)
 
 agent = QAgent(in_dim=2, embedding_dim=64)
 agent.to(agent.device)
-env = maze_env(get_random_maze_args(), time_limit=30)
+env = maze_env(args, time_limit=30)
+
 
 n_ep = 100000
 for e in range(n_ep):
@@ -30,7 +35,7 @@ for e in range(n_ep):
             loss = agent.fit()
             print('EP {}, {} timesteps,  RWD:{:4d}, loss:{:04f}, epsilon:{:05f}'
                   .format(e, ep_len, R, loss, agent.epsilon))
-            # wandb.log({"loss": loss, "accum_reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': e})
+            wandb.log({"loss": loss, "accum_reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': e})
             break
 
     if e % 1000 == 0 and e > 0:

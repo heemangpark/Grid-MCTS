@@ -77,7 +77,7 @@ class GNNLayer_typeaware(nn.Module):
     def apply_func(self, nodes):
         msgs = []
         for e in self.edge_types:
-            msgs.append(nodes.data.pop('agg{}'.format(e)))
+            msgs.append(nodes.data['agg{}'.format(e)])
         nf_in = torch.concat(msgs, -1)
         nf_out = self.node_update(nf_in)
         return {'nf_out': nf_out}

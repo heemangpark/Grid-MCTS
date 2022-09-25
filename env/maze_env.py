@@ -99,7 +99,6 @@ class maze_env:
 
     def generate_base_graph_loc(self, maze):
         g = dgl.DGLGraph()
-        n_grid = self.args.maze_x
 
         obs_type = self.args.cell_type['obstacle']
         goal_type = self.args.cell_type['goal']
@@ -112,7 +111,7 @@ class maze_env:
         obstacle_nf = np.stack([obstacle_x, obstacle_y], -1)
         goal_nf = np.stack([goal_x, goal_y], -1)
 
-        init_nf = np.concatenate([obstacle_nf, goal_nf], 0) / n_grid
+        init_nf = np.concatenate([obstacle_nf, goal_nf], 0) / self.args.maze_x
         g.ndata['init_nf'] = torch.Tensor(init_nf)
         g.ndata['type'] = torch.Tensor([obs_type] * n_obstacle + [goal_type]).reshape(-1, 1)
         return g
@@ -123,18 +122,19 @@ class maze_env:
         g.ndata['init_nf'] = torch.eye(4)[state.reshape(-1)]
         return g
 
-    def convert_maze_to_g_loc(self, state):
+    def convert_maze_to_g_loc(self, *args):
         g = deepcopy(self.base_graph)
         g.add_nodes(1)
         n_nodes = g.number_of_nodes()
 
+        obs_type = self.args.cell_type['obstacle']
+        goal_type = self.args.cell_type['goal']
         ag_type = self.args.cell_type['agent']
-        ag_x, ag_y = (state == ag_type).nonzero()
 
-        g.ndata['type'][-1] = ag_type
-        g.ndata['init_nf'][-1] = torch.Tensor([ag_x.item(), ag_y.item()]) / self.args.maze_x
+        g.ndata['init_nf'][-1] = torch.Tensor(self.ag_loc) / self.args.maze_x
 
-        g.add_edges(range(n_nodes), n_nodes-1)
-        g.edata['type'] = g.ndata['type']
+        g.add_edges(range(n_nodes), n_nodes - 1)
+        g.ndata['type'] = torch.Tensor([obs_type] * (n_nodes - 2) + [goal_type] + [ag_type]).reshape(-1, 1)
+        g.edata['type'] = torch.Tensor([obs_type] * (n_nodes - 2) + [goal_type] + [ag_type]).reshape(-1, 1)
 
         return g
