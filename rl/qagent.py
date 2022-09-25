@@ -22,7 +22,7 @@ class QAgent(nn.Module):
         self.batch_size = 100
         self.gamma = .9
 
-        self.memory = ReplayMemory(50000)
+        self.memory = ReplayMemory(3000)
         self.optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
