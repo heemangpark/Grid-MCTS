@@ -24,7 +24,7 @@ class QAgent(nn.Module):
         self.gamma = .9
 
         self.memory = ReplayMemory(3000)
-        self.optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
+        self.optimizer = torch.optim.Adam(list(self.gnn.parameters()) + list(self.qfunc.parameters()), lr=1e-3)
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self.update_target(self.gnn, self.gnn_target, 1)
@@ -103,8 +103,8 @@ class QAgent(nn.Module):
         loss.backward()
         self.optimizer.step()
 
-        self.update_target(self.gnn, self.gnn_target, .1)
-        self.update_target(self.qfunc, self.qfunc_target, .1)
+        self.update_target(self.gnn, self.gnn_target, .5)
+        self.update_target(self.qfunc, self.qfunc_target, .5)
 
         return loss.item()
 

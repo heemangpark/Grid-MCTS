@@ -38,6 +38,7 @@ class GNNLayer_typeaware(nn.Module):
         self.node_update = nn.Sequential(nn.Linear(out_dim * len(edge_types), out_dim, bias=False),
                                          nn.ReLU())
         self.edge_types = edge_types
+        self.out_dim = out_dim
 
     def forward(self, g: dgl.DGLGraph, nf):
         g.ndata['nf'] = nf
@@ -46,6 +47,7 @@ class GNNLayer_typeaware(nn.Module):
             filter_func = partial(filter_edges, etype=etype)
             message_func = partial(self.message_func, etype=etype)
             reduce_func = partial(self.reduce_func, etype=etype)
+            g.ndata['agg{}'.format(etype)] = torch.zeros((g.number_of_nodes(), self.out_dim)).to(nf.device)
 
             edges = g.filter_edges(filter_func)
             g.send_and_recv(edges, message_func, reduce_func)
