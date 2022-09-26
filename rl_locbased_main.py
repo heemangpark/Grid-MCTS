@@ -16,7 +16,6 @@ agent = QAgent(in_dim=2, embedding_dim=64)
 agent.to(agent.device)
 env = maze_env(args, time_limit=30)
 
-
 n_ep = 100000
 for e in range(n_ep):
     g, mask = env.reset()

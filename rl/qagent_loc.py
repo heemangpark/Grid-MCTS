@@ -13,19 +13,21 @@ class QAgent(nn.Module):
     def __init__(self, in_dim, embedding_dim):
         super(QAgent, self).__init__()
 
-        self.gnn = GNN_typeaware(in_dim, out_dim=embedding_dim, n_layers=5)
+        self.gnn = GNN_typeaware(in_dim, out_dim=embedding_dim)
         self.qfunc = nn.Sequential(nn.Linear(embedding_dim, embedding_dim),
                                    nn.ReLU(),
-                                   nn.Linear(embedding_dim, 4))
+                                   nn.Linear(embedding_dim, 4)
+                                   )
 
-        self.gnn_target = GNN_typeaware(in_dim, out_dim=embedding_dim, n_layers=5)
+        self.gnn_target = GNN_typeaware(in_dim, out_dim=embedding_dim)
         self.qfunc_target = nn.Sequential(nn.Linear(embedding_dim, embedding_dim),
                                           nn.ReLU(),
-                                          nn.Linear(embedding_dim, 4))
+                                          nn.Linear(embedding_dim, 4)
+                                          )
 
         self.epsilon = 1.0
         self.batch_size = 100
-        self.gamma = .99
+        self.gamma = .95
 
         self.memory = ReplayMemory(3000)
         self.optimizer = torch.optim.Adam(list(self.gnn.parameters()) + list(self.qfunc.parameters()), lr=1e-3)
@@ -51,7 +53,7 @@ class QAgent(nn.Module):
                 action = q.argmax(-1)
                 self.q = q
 
-            self.epsilon = max(0.05, self.epsilon - 0.00005)
+        self.epsilon = max(0.05, self.epsilon - 0.00001)
 
         return action.item()
 
