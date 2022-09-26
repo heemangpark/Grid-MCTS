@@ -7,7 +7,7 @@ from env.maze_env import maze_env
 from rl.q_agent_loc import QAgent
 from utils.arguments import maze_args
 
-wandb.init(project='IoT', entity='heemang')
+# wandb.init(project='IoT', entity='heemang')
 # wandb.init(project="etri", entity="curie_ahn", config=maze_args)
 
 args = maze_args
@@ -35,7 +35,8 @@ for e in range(n_ep):
             loss = agent.fit()
             print('EP {}, {} timesteps,  RWD:{:4d}, loss:{:04f}, epsilon:{:05f}'
                   .format(e, ep_len, R, loss, agent.epsilon))
-            wandb.log({"loss": loss, "reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': e})
+            # wandb.log({"loss": loss, "reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': e})
             break
+
     if e % 1000 == 0 and e > 0:
         torch.save(agent.state_dict(), './saved/saved_random_{}.th'.format(e))

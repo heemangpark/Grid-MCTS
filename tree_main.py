@@ -11,7 +11,7 @@ if __name__ == "__main__":
     start, goal, maze = grid(maze_args)
     tree = Tree(start, goal, maze)
     tree.grow()
-    vis_route(maze_args, maze, tree.state_seq, start, goal)
+    vis_route(maze_args, maze, tree.state_seq, start, goal, 'tree')
 
     nx.write_gpickle(tree, './tree/tree.nx')
     pickle.dump(tree.act_seq, open('./tree/route_{}.pkl'.format(len(tree.act_seq)), 'wb'))

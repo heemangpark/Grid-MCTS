@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def vis_route(args, maze, seq, start, goal):
+def vis_route(args, maze, seq, start, goal, id):
     fig, ax = plt.subplots()
 
     ax.grid(False)
@@ -53,4 +53,4 @@ def vis_route(args, maze, seq, start, goal):
     ax.plot(plot_seq[:, 0], plot_seq[:, 1], linewidth=2, color='k')
     ax.plot(start[0] + .5, start[1] + .5, marker='o', markersize=7.5, color='yellow')
     ax.plot(goal[0] + .5, goal[1] + .5, marker='*', markersize=15, color='yellow')
-    fig.savefig('res.png')
+    fig.savefig('res_{}.png'.format(id))
