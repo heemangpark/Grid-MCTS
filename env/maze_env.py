@@ -22,7 +22,7 @@ class maze_env:
         self.base_graph = self.generate_base_graph_loc(self.maze)
 
         state = copy(self.maze)
-        state[tuple(self.ag_loc)] = self.args.cell_type['agent']
+        state[tuple(self.ag_loc)] = self.args.cell_type['empty']
 
         mask = self.mask(state)
         if mask.sum() == 4:
@@ -37,10 +37,8 @@ class maze_env:
             temp_next_loc = ag_loc + self.args.actions[a]
             if (0 <= temp_next_loc[0] < self.args.maze_x) and (0 <= temp_next_loc[1] < self.args.maze_y):
                 next_loc = temp_next_loc
-            else:
-                next_loc = ag_loc
-            if maze[tuple(next_loc)] == self.args.cell_type['empty'] or self.args.cell_type['goal']:
-                m = False
+                if maze[tuple(next_loc)] == self.args.cell_type['empty'] or self.args.cell_type['goal']:
+                    m = False
             mask.append(m)
         return torch.tensor(mask).reshape(1, -1)
 
@@ -48,12 +46,7 @@ class maze_env:
         self.t += 1
 
         """transition"""
-        temp_next_loc = self.ag_loc + self.args.actions[action]
-        if (0 <= temp_next_loc[0] < self.args.maze_x) and (0 <= temp_next_loc[1] < self.args.maze_y):
-            self.ag_loc = temp_next_loc
-        else:
-            pass
-        # self.ag_loc = self.ag_loc + self.args.actions[action]
+        self.ag_loc = self.ag_loc + self.args.actions[action]
 
         state = copy(self.maze)
         terminated = False
