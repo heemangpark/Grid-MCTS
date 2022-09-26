@@ -74,7 +74,7 @@ class GNNLayer_typeaware(nn.Module):
     def reduce_func(self, nodes, etype):
         agg_msg = nodes.mailbox['msg{}'.format(etype)]
 
-        return {'agg{}'.format(etype): agg_msg.mean(1)}
+        return {'agg{}'.format(etype): agg_msg.sum(1)}
 
     def apply_func(self, nodes):
         msgs = []
