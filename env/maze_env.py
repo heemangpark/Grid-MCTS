@@ -34,10 +34,10 @@ class maze_env:
         ag_loc, mask = self.ag_loc, []
         for a in list(self.args.action_type.values()):
             m = True
-            temp_next_loc = ag_loc + self.args.actions[a]
-            if (0 <= temp_next_loc[0] < self.args.maze_x) and (0 <= temp_next_loc[1] < self.args.maze_y):
-                next_loc = temp_next_loc
-                if maze[tuple(next_loc)] == self.args.cell_type['empty'] or self.args.cell_type['goal']:
+            next_loc = ag_loc + self.args.actions[a]
+            if (0 <= next_loc[0] < self.args.maze_x) and (0 <= next_loc[1] < self.args.maze_y):
+                if maze[tuple(next_loc)] == self.args.cell_type['empty'] or maze[tuple(next_loc)] == \
+                        self.args.cell_type['goal']:
                     m = False
             mask.append(m)
         return torch.tensor(mask).reshape(1, -1)
@@ -60,7 +60,7 @@ class maze_env:
             else:
                 pass
 
-        state[tuple(self.ag_loc)] = self.args.cell_type['agent']
+        # state[tuple(self.ag_loc)] = self.args.cell_type['agent']
         g = self.convert_maze_to_g_loc(state)
         if self.t > self.time_limit:
             terminated = True
