@@ -1,13 +1,29 @@
+import torch
+
 from env.maze_env import maze_env
 from rl.q_agent_loc import QAgent
 from utils.arguments import maze_args
 from utils.visualize import vis_route
 
-"""train: 5~10 -> test: 10"""
+"""
+============================                                   
+== train_arguments        ==
+== difficulty: 0.3        ==
+== size: 5~10 (random)    ==
+============================
+== test_arguments         ==
+== difficulty: 0.3 & 0.4  ==
+== size: 10, 15, 20       ==
+============================
+"""
+
 args = maze_args
+args['difficulty'] = 0.3
+args['size'] = 15
 agent = QAgent(in_dim=2, embedding_dim=64)
 agent.to(agent.device)
-env = maze_env(args, T=40)
+agent.load_state_dict(torch.load('./saved/blank'))
+env = maze_env(args, T=4 * args['size'])
 
 """evaluation"""
 g, mask = env.reset()
