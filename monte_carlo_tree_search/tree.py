@@ -5,29 +5,32 @@ from monte_carlo_tree_search.tree_functions import expand, children, select, bac
 
 
 class Tree:
-    def __init__(self, args, maze, agent_id):
-        self.args = args
+    def __init__(self, start, goal, maze):
+        self.goal = goal
         self.maze = maze
         self.g = nx.DiGraph()
-        self.g.add_node(1, state=args.start[agent_id - 1], N=1)
-        self.state_sequence, self.action_sequence = [args.start[agent_id - 1]], []
-        _ = expand(self.g, 1, get_avail_action(self.maze, args.start[agent_id - 1]))
+        self.g.add_node(1, state=start, N=1)
+        _ = expand(self.g, 1, get_avail_action(self.maze, start))
+        self.state_seq, self.act_seq = None, None
 
     def grow(self):
         while True:
             idx = 1
-            self.state_sequence = []
-            self.action_sequence = []
+            state_seq = []
+            act_seq = []
 
             """selection"""
             while len(children(self.g, idx)) != 0:
                 idx, a = select(self.g, idx)
-                self.action_sequence.append(a)
-                curr_state = self.g.nodes[idx]['state']
-                self.state_sequence.append(curr_state)
+                act_seq.append(a)
+                curr_state = list(self.g.nodes[idx]['state'])
+                state_seq.append(curr_state)
+
+            self.state_seq = state_seq
+            self.act_seq = act_seq
 
             """terminal check on selected leaf"""
-            if terminated(self.args, self.g.nodes[idx]['state']):
+            if terminated(self.goal, self.g.nodes[idx]['state']):
                 break
             else:
                 pass
@@ -38,4 +41,4 @@ class Tree:
 
             """backup"""
             for leaf in leaves:
-                backup(self.args, self.g, leaf)
+                backup(self.goal, self.g, leaf)

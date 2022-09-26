@@ -37,12 +37,12 @@ def expand(graph, idx, avail_actions):
     return leaves
 
 
-def backup(args, graph, leaf_idx):
+def backup(goal, graph, leaf_idx):
     while leaf_idx != 1:
         leaf_state = graph.nodes[leaf_idx]['state']
         parent_idx = parent(graph, leaf_idx)
         graph.nodes[parent_idx]['N'] += 1
-        graph.edges[parent_idx, leaf_idx]['R'] += distance_score(leaf_state, args.goal)
+        graph.edges[parent_idx, leaf_idx]['R'] += distance_score(leaf_state, goal)
         graph.edges[parent_idx, leaf_idx]['n'] += 1
         graph.edges[parent_idx, leaf_idx]['Q'] = graph.edges[parent_idx, leaf_idx]['R'] / graph.edges[parent_idx,
                                                                                                       leaf_idx]['n']

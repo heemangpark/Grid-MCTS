@@ -1,18 +1,17 @@
 import torch
 
-import wandb
 from env.maze_env import maze_env
-from rl.qagent import QAgent
-from utils.arguments import get_random_maze_args
+from prev.prev_q_agent import QAgent
+from utils.arguments import maze_args
 
 # wandb.init(project="etri", entity="curie_ahn")
 # wandb.init(project='IoT', entity='heemang')
 
 agent = QAgent(in_dim=4, embedding_dim=64)
 agent.to(agent.device)
-env = maze_env(get_random_maze_args(), time_limit=30)
+env = maze_env(maze_args, T=30)
 
-n_ep = 100000
+n_ep = 10000
 for e in range(n_ep):
     g, mask = env.reset()
     R, ep_len = 0, 0

@@ -4,7 +4,7 @@ UP = 0
 DOWN = 1
 LEFT = 2
 RIGHT = 3
-move = np.array([[0, 1], [0, -1], [-1, 0], [1, 0]])
+move = np.array([[-1, 0], [1, 0], [0, -1], [0, 1]])
 
 
 def get_avail_action(maze, loc):
@@ -32,5 +32,5 @@ def transition_loc(loc, action):
     return loc + move[action]
 
 
-def terminated(args, loc):
-    return tuple(loc) == tuple(args.goal)
+def terminated(goal, loc):
+    return tuple(goal) == tuple(loc)

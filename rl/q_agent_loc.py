@@ -1,7 +1,6 @@
 from math import inf
 
 import dgl
-import numpy as np
 import torch
 import torch.nn as nn
 
@@ -12,29 +11,30 @@ from rl.replaymemory import ReplayMemory
 class QAgent(nn.Module):
     def __init__(self, in_dim, embedding_dim):
         super(QAgent, self).__init__()
+        self.q = None
 
         self.gnn = GNN_typeaware(in_dim, out_dim=embedding_dim)
-        self.qfunc = nn.Sequential(nn.Linear(embedding_dim, embedding_dim),
-                                   nn.ReLU(),
-                                   nn.Linear(embedding_dim, 4)
-                                   )
+        self.q_func = nn.Sequential(nn.Linear(embedding_dim, embedding_dim),
+                                    nn.ReLU(),
+                                    nn.Linear(embedding_dim, 4)
+                                    )
 
         self.gnn_target = GNN_typeaware(in_dim, out_dim=embedding_dim)
-        self.qfunc_target = nn.Sequential(nn.Linear(embedding_dim, embedding_dim),
-                                          nn.ReLU(),
-                                          nn.Linear(embedding_dim, 4)
-                                          )
+        self.q_func_target = nn.Sequential(nn.Linear(embedding_dim, embedding_dim),
+                                           nn.ReLU(),
+                                           nn.Linear(embedding_dim, 4)
+                                           )
 
         self.epsilon = 1.0
         self.batch_size = 100
         self.gamma = .95
 
         self.memory = ReplayMemory(3000)
-        self.optimizer = torch.optim.Adam(list(self.gnn.parameters()) + list(self.qfunc.parameters()), lr=1e-3)
+        self.optimizer = torch.optim.Adam(list(self.gnn.parameters()) + list(self.q_func.parameters()), lr=1e-3)
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self.update_target(self.gnn, self.gnn_target, 1)
-        self.update_target(self.qfunc, self.qfunc_target, 1)
+        self.update_target(self.q_func, self.q_func_target, 1)
 
     def step(self, state, mask, greedy=False):
         self.to('cpu')
@@ -63,7 +63,7 @@ class QAgent(nn.Module):
         ag_nodes = g.filter_nodes(filter_ag_nodes)
         ag_nf = updated_nf[ag_nodes]
 
-        qs = self.qfunc(ag_nf)
+        qs = self.q_func(ag_nf)
 
         return qs
 
@@ -73,7 +73,7 @@ class QAgent(nn.Module):
         ag_nodes = g.filter_nodes(filter_ag_nodes)
         ag_nf = updated_nf[ag_nodes]
 
-        qs = self.qfunc_target(ag_nf)
+        qs = self.q_func_target(ag_nf)
 
         return qs
 
@@ -100,9 +100,9 @@ class QAgent(nn.Module):
         with torch.no_grad():
             nq = self.compute_q_target(ng)
             nq[mask] = -inf
-            n_maxq = nq.max(-1)[0]
+            n_max_q = nq.max(-1)[0]
 
-        target = r + self.gamma * n_maxq * (1 - t)
+        target = r + self.gamma * n_max_q * (1 - t)
         loss = ((target - selected_q) ** 2).mean()
 
         self.optimizer.zero_grad()
@@ -110,7 +110,7 @@ class QAgent(nn.Module):
         self.optimizer.step()
 
         self.update_target(self.gnn, self.gnn_target, .9)
-        self.update_target(self.qfunc, self.qfunc_target, .9)
+        self.update_target(self.q_func, self.q_func_target, .9)
 
         return loss.item()
 
