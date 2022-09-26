@@ -13,15 +13,19 @@ class QAgent(nn.Module):
     def __init__(self, in_dim, embedding_dim):
         super(QAgent, self).__init__()
 
-        self.gnn = GNN_typeaware(in_dim, out_dim=embedding_dim, n_layers=10)
-        self.qfunc = nn.Sequential(nn.Linear(embedding_dim, 4))
+        self.gnn = GNN_typeaware(in_dim, out_dim=embedding_dim, n_layers=5)
+        self.qfunc = nn.Sequential(nn.Linear(embedding_dim, embedding_dim),
+                                   nn.ReLU(),
+                                   nn.Linear(embedding_dim, 4))
 
-        self.gnn_target = GNN_typeaware(in_dim, out_dim=embedding_dim)
-        self.qfunc_target = nn.Sequential(nn.Linear(embedding_dim, 4))
+        self.gnn_target = GNN_typeaware(in_dim, out_dim=embedding_dim, n_layers=5)
+        self.qfunc_target = nn.Sequential(nn.Linear(embedding_dim, embedding_dim),
+                                          nn.ReLU(),
+                                          nn.Linear(embedding_dim, 4))
 
         self.epsilon = 1.0
         self.batch_size = 100
-        self.gamma = .9
+        self.gamma = .99
 
         self.memory = ReplayMemory(3000)
         self.optimizer = torch.optim.Adam(list(self.gnn.parameters()) + list(self.qfunc.parameters()), lr=1e-3)
@@ -32,7 +36,7 @@ class QAgent(nn.Module):
 
     def step(self, state, mask, greedy=False):
         self.to('cpu')
-        q = self.compute_q(state)
+        q = self.compute_q_target(state)
         q[mask] = -inf
         if greedy:
             action = q.argmax(-1)
@@ -103,8 +107,8 @@ class QAgent(nn.Module):
         loss.backward()
         self.optimizer.step()
 
-        self.update_target(self.gnn, self.gnn_target, .5)
-        self.update_target(self.qfunc, self.qfunc_target, .5)
+        self.update_target(self.gnn, self.gnn_target, .9)
+        self.update_target(self.qfunc, self.qfunc_target, .9)
 
         return loss.item()
 
