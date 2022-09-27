@@ -30,19 +30,19 @@ class maze_env:
         self.ag_loc = rand_loc[:2]
         self.start_loc = rand_loc[:2]
         self.goal_loc = rand_loc[-2:]
-        maze[tuple(self.start_loc)] = self.args['cell_type']['empty']
+        maze[tuple(self.ag_loc)] = self.args['cell_type']['empty']
         maze[tuple(self.goal_loc)] = self.args['cell_type']['goal']
 
         self.maze = maze
         self.base_graph = self.generate_base_graph_loc(maze)
 
         state = copy(self.maze)
-        mask = self.mask(state)
+        ret_maze, ret_mask = self.convert_maze_to_g_loc(state), self.mask(state)
 
-        if mask.sum() == 4:
-            self.reset()
+        if self.mask(state).sum() == 4:
+            ret_maze, ret_mask = self.reset()
 
-        return self.convert_maze_to_g_loc(state), self.mask(state)
+        return ret_maze, ret_mask
 
     def mask(self, maze):
         mask = []
