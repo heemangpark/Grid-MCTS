@@ -5,13 +5,12 @@ from env.maze_env import maze_env
 from rl.q_agent_loc import QAgent
 from utils.arguments import maze_args
 
-wandb.init(project='IoT', entity='heemang')
+# wandb.init(project='IoT', entity='heemang')
 # wandb.init(project="etri", entity="curie_ahn")
 
 args = maze_args
 agent = QAgent(in_dim=2, embedding_dim=64)
 agent.to(agent.device)
-args['size'] = 5
 env = maze_env(args, T=args['size'] * 4)
 
 n_ep = 100000
@@ -32,7 +31,7 @@ for e in range(n_ep):
             loss = agent.fit()
             print('EP {}, {} timesteps,  RWD:{:4d}, loss:{:04f}, epsilon:{:05f}'
                   .format(e, ep_len, R, loss, agent.epsilon))
-            wandb.log({"loss": loss, "reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': e})
+            # wandb.log({"loss": loss, "reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': e})
             break
 
     if e % 1000 == 0 and e > 0:

@@ -1,6 +1,7 @@
 from math import inf
 
 import dgl
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -96,6 +97,7 @@ class QAgent(nn.Module):
         q = self.compute_q(g)
         selected_q = q.gather(-1, a.reshape(-1, 1))
         selected_q = selected_q.squeeze()
+        norm_selected_q = (selected_q - torch.mean(selected_q)) / torch.std(selected_q)
 
         with torch.no_grad():
             nq = self.compute_q_target(ng)
@@ -103,7 +105,9 @@ class QAgent(nn.Module):
             n_max_q = nq.max(-1)[0]
 
         target = r + self.gamma * n_max_q * (1 - t)
-        loss = ((target - selected_q) ** 2).mean()
+        norm_target = (target - torch.mean(target)) / torch.std(target)
+        # loss = ((target - selected_q) ** 2).mean()
+        loss = ((norm_target - norm_selected_q) ** 2).mean()
 
         self.optimizer.zero_grad()
         loss.backward()
