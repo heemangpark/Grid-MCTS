@@ -1,6 +1,7 @@
 from math import inf
 
 import dgl
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,19 +13,11 @@ from rl.replaymemory import ReplayMemory
 class QAgent(nn.Module):
     def __init__(self, in_dim, embedding_dim):
         super(QAgent, self).__init__()
-        self.q = None
-
         self.gnn = GNN_typeaware(in_dim, out_dim=embedding_dim, n_layers=2)
-        self.q_func = nn.Sequential(nn.Linear(embedding_dim, embedding_dim / 2),
-                                    nn.ReLU(),
-                                    nn.Linear(embedding_dim, 4)
-                                    )
+        self.q_func = nn.Sequential(nn.Linear(64, 32), nn.ReLU(), nn.Linear(32, 4))
 
         self.gnn_target = GNN_typeaware(in_dim, out_dim=embedding_dim, n_layers=2)
-        self.q_func_target = nn.Sequential(nn.Linear(embedding_dim, embedding_dim / 2),
-                                           nn.ReLU(),
-                                           nn.Linear(embedding_dim, 4)
-                                           )
+        self.q_func_target = nn.Sequential(nn.Linear(64, 32), nn.ReLU(), nn.Linear(32, 4))
 
         self.epsilon = 1.0
         self.batch_size = 100
@@ -40,14 +33,17 @@ class QAgent(nn.Module):
     def step(self, state, mask, greedy=False):
         self.to('cpu')
         q = self.compute_q_target(state)
-        q[mask] = -inf
 
         if greedy:
-            action = q.argmax(-1)
+            greedy_q = q
+            greedy_q[mask] = -inf
+            action = greedy_q.argmax(-1)
         else:
-            q_logit = F.log_softmax(q, dim=0)
-            action_dist = torch.distributions.Categorical(logits=q_logit)
-            action = action_dist.sample()
+            reversed_mask = [not m for m in list(mask.squeeze())]
+            prob = F.softmax(q[0][reversed_mask], dim=-1)
+            action_dist = torch.distributions.Categorical(probs=prob)
+            action_id = action_dist.sample().item()
+            action = np.array([0, 1, 2, 3])[reversed_mask][action_id]
 
         return action.item()
 

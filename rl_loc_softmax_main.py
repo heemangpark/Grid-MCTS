@@ -29,10 +29,9 @@ for e in range(n_ep):
         R += r
         if t:
             loss = agent.fit()
-            print('EP {}, {} timesteps,  RWD:{:4d}, loss:{:04f}, epsilon:{:05f}'
-                  .format(e, ep_len, R, loss, agent.epsilon))
-            # wandb.log({"loss": loss, "reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': e})
+            print('EP {}, {} timesteps,  RWD:{:4d}, loss:{:04f}'.format(e, ep_len, R, loss))
+            # wandb.log({"loss": loss, "reward": R, 'ep_len': ep_len, 'timestep': e})
             break
 
     if e % 1000 == 0 and e > 0:
-        torch.save(agent.state_dict(), './saved/grid_{}_{}.th'.format(args['size'], e))
+        torch.save(agent.state_dict(), './saved/softmax_grid_{}_{}.th'.format(args['size'], e))
