@@ -9,11 +9,11 @@ args = maze_args
 args['size'] = 10
 agent = QAgent(in_dim=2, embedding_dim=64)
 agent.to(agent.device)
-agent.load_state_dict(torch.load('./saved/grid_5_5000.th'))
+agent.load_state_dict(torch.load('../saved/grid_5_99000.th'))
 env = maze_env(args, T=4 * args['size'])
 
 """evaluation"""
-for eval_id in range(5):
+for eval_id in range(30):
     g, mask = env.reset()
     seq = []
     while True:
