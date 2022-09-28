@@ -119,8 +119,8 @@ class maze_env:
         n_obstacle = len(obstacle_x)
         g.add_nodes(n_obstacle + 1)
 
-        obstacle_nf = np.stack([obstacle_x, obstacle_y], -1)
-        goal_nf = np.stack([goal_x, goal_y], -1)
+        obstacle_nf = np.stack([obstacle_x, obstacle_y], -1)  # coordination of obstacles
+        goal_nf = np.stack([goal_x, goal_y], -1)  # coordination of goal
 
         init_nf = np.concatenate([obstacle_nf, goal_nf], 0) / self.args['size']
         g.ndata['init_nf'] = torch.Tensor(init_nf)
