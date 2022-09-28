@@ -15,16 +15,15 @@ class QAgent(nn.Module):
         self.q = None
 
         self.gnn = GNN_typeaware(in_dim, out_dim=embedding_dim, n_layers=2)
-        self.q_func = nn.Sequential(nn.Linear(embedding_dim, embedding_dim),
+        self.q_func = nn.Sequential(nn.Linear(embedding_dim, embedding_dim / 2),
                                     nn.ReLU(),
-                                    nn.Linear(embedding_dim, 4),
+                                    nn.Linear(embedding_dim, 4)
                                     )
 
         self.gnn_target = GNN_typeaware(in_dim, out_dim=embedding_dim, n_layers=2)
-        self.q_func_target = nn.Sequential(nn.Linear(embedding_dim, embedding_dim),
+        self.q_func_target = nn.Sequential(nn.Linear(embedding_dim, embedding_dim / 2),
                                            nn.ReLU(),
-                                           nn.Linear(embedding_dim, 4),
-                                           nn.Softmax(1)
+                                           nn.Linear(embedding_dim, 4)
                                            )
 
         self.epsilon = 1.0
