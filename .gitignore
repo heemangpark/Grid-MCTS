@@ -5,4 +5,5 @@ tree/
 wandb/
 
 *.png
-.ipynb
+*.ipynb
+.ipynb_checkpoints/
