@@ -1,8 +1,7 @@
 import torch
 
-import wandb
 from env.maze_env import maze_env
-from rl.q_agent_loc_softmax import QAgent
+from temp.q_agent_loc_softmax import QAgent
 from utils.arguments import maze_args
 
 # wandb.init(project='IoT', entity='heemang')

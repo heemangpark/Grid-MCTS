@@ -14,29 +14,32 @@ class maze_env:
         self.T = T
         self.ag_loc, self.start_loc, self.goal_loc = None, None, None
         self.maze, self.base_graph = None, None
+        self.env_import = False
 
     def reset(self):
         self.t = 0
+        if self.env_import:
+            id = np.random.choice(list(set(range(1, 101)) - {"user_define"}))
+            maze = np.load('../utils/sample_maps/maze_{}.npy'.format(id))
+            self.maze = maze
+        else:
+            maze = np.zeros((self.args['size'], self.args['size']))
+            obstacle = np.random.random((self.args['size'], self.args['size'])) < self.args['difficulty']
+            maze[obstacle] = self.args['cell_type']['obstacle']
 
-        maze = np.zeros((self.args['size'], self.args['size']))
-        obstacle = np.random.random((self.args['size'], self.args['size'])) < self.args['difficulty']
-        maze[obstacle] = self.args['cell_type']['obstacle']
+            rand_loc = np.random.choice(self.args['size'], 4)
+            if rand_loc[0] == rand_loc[2] and rand_loc[1] == rand_loc[3]:
+                while not rand_loc[0] == rand_loc[2] and rand_loc[1] == rand_loc[3]:
+                    rand_loc = np.random.choice(self.args['size'], 4)
 
-        rand_loc = np.random.choice(self.args['size'], 4)
-        if rand_loc[0] == rand_loc[2] and rand_loc[1] == rand_loc[3]:
-            while not rand_loc[0] == rand_loc[2] and rand_loc[1] == rand_loc[3]:
-                rand_loc = np.random.choice(self.args['size'], 4)
+            self.ag_loc = rand_loc[:2]
+            self.start_loc = rand_loc[:2]
+            self.goal_loc = rand_loc[-2:]
+            maze[tuple(self.ag_loc)] = self.args['cell_type']['empty']
+            maze[tuple(self.goal_loc)] = self.args['cell_type']['goal']
+            self.maze = maze
 
-        self.ag_loc = rand_loc[:2]
-        self.start_loc = rand_loc[:2]
-        self.goal_loc = rand_loc[-2:]
-        maze[tuple(self.ag_loc)] = self.args['cell_type']['empty']
-        maze[tuple(self.goal_loc)] = self.args['cell_type']['goal']
-
-        self.maze = maze
-        self.base_graph = self.generate_base_graph_loc(maze)
-
-        state = copy(self.maze)
+        self.base_graph, state = self.generate_base_graph_loc(maze), copy(self.maze)
         ret_maze, ret_mask = self.convert_maze_to_g_loc(state), self.mask(state)
 
         if self.mask(state).sum() == 4:

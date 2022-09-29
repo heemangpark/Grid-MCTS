@@ -8,21 +8,21 @@ move = np.array([[-1, 0], [1, 0], [0, -1], [0, 1]])
 
 
 def get_avail_action(maze, loc):
-    temp_avail_actions = []
-    map_x, map_y = maze.shape
-    if loc[1] != map_y - 1:
-        temp_avail_actions.append(UP)
-    if loc[1] != 0:
-        temp_avail_actions.append(DOWN)
-    if loc[0] != map_x - 1:
-        temp_avail_actions.append(RIGHT)
+    in_bound = []
+    size = len(maze)
     if loc[0] != 0:
-        temp_avail_actions.append(LEFT)
+        in_bound.append(UP)
+    if loc[0] != size - 1:
+        in_bound.append(DOWN)
+    if loc[1] != 0:
+        in_bound.append(LEFT)
+    if loc[1] != size - 1:
+        in_bound.append(RIGHT)
 
     avail_actions = []
-    for a in temp_avail_actions:
+    for a in in_bound:
         new_loc = loc + move[a]
-        if not maze[tuple(new_loc)] == 1:
+        if maze[tuple(new_loc)] != 1:
             avail_actions.append(a)
 
     return avail_actions

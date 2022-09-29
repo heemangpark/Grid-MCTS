@@ -13,14 +13,13 @@ agent.load_state_dict(torch.load('../saved/grid_5_99000.th'))
 env = maze_env(args, T=4 * args['size'])
 
 """evaluation"""
-for eval_id in range(30):
+for eval_id in range(5):
     g, mask = env.reset()
     seq = []
     while True:
         action = agent.step(g, mask, greedy=True)
         ng, r, n_mask, t = env.step(action)
         seq.append(env.ag_loc)
-        agent.push(g, action, mask, r, ng, t)
         g, mask = ng, n_mask
         if t:
             break

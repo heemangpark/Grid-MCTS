@@ -1,7 +1,7 @@
 import torch
 
 from env.maze_env import maze_env
-from prev.prev_q_agent import QAgent
+from temp.prev_q_agent import QAgent
 from utils.arguments import maze_args
 
 # wandb.init(project="etri", entity="curie_ahn")

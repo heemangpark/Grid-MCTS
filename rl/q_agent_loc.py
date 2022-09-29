@@ -1,7 +1,6 @@
 from math import inf
 
 import dgl
-import numpy as np
 import torch
 import torch.nn as nn
 
@@ -32,29 +31,32 @@ class QAgent(nn.Module):
 
         self.memory = ReplayMemory(3000)
         self.optimizer = torch.optim.Adam(list(self.gnn.parameters()) + list(self.q_func.parameters()), lr=1e-3)
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = 'cuda:1' if torch.cuda.device_count() > 1 else 'cuda'
 
         self.update_target(self.gnn, self.gnn_target, 1)
         self.update_target(self.q_func, self.q_func_target, 1)
 
-    def step(self, state, mask, greedy=False):
+    def step(self, state, mask, greedy=False, tree_search=False):
         self.to('cpu')
         q = self.compute_q_target(state)
-        q[mask] = -inf
-        if greedy:
-            action = q.argmax(-1)
+        if tree_search:
+            return q.squeeze().detach().numpy()[mask]
         else:
-            random_q = torch.rand_like(q)
-            random_q[mask] = -inf
-
-            if torch.rand(1) < self.epsilon:
-                action = random_q.argmax(-1)
-                self.q = random_q
-            else:
+            q[mask] = -inf
+            if greedy:
                 action = q.argmax(-1)
-                self.q = q
+            else:
+                random_q = torch.rand_like(q)
+                random_q[mask] = -inf
 
-        self.epsilon = max(0.05, self.epsilon - 0.00001)
+                if torch.rand(1) < self.epsilon:
+                    action = random_q.argmax(-1)
+                    self.q = random_q
+                else:
+                    action = q.argmax(-1)
+                    self.q = q
+
+            self.epsilon = max(0.05, self.epsilon - 0.00001)
 
         return action.item()
 
@@ -97,7 +99,7 @@ class QAgent(nn.Module):
         q = self.compute_q(g)
         selected_q = q.gather(-1, a.reshape(-1, 1))
         selected_q = selected_q.squeeze()
-        norm_selected_q = (selected_q - torch.mean(selected_q)) / torch.std(selected_q)
+        # norm_selected_q = (selected_q - torch.mean(selected_q)) / torch.std(selected_q)
 
         with torch.no_grad():
             nq = self.compute_q_target(ng)
@@ -106,8 +108,8 @@ class QAgent(nn.Module):
 
         target = r + self.gamma * n_max_q * (1 - t)
         norm_target = (target - torch.mean(target)) / torch.std(target)
-        # loss = ((target - selected_q) ** 2).mean()
-        loss = ((norm_target - norm_selected_q) ** 2).mean()
+        loss = ((target - selected_q) ** 2).mean()
+        # loss = ((norm_target - norm_selected_q) ** 2).mean()
 
         self.optimizer.zero_grad()
         loss.backward()
