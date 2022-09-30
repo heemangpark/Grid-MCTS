@@ -98,6 +98,7 @@ class QAgent(nn.Module):
         n_mask = torch.stack(n_mask).squeeze()
 
         q = self.compute_q(g)
+        q[mask] = -inf
         selected_q = q.gather(-1, a.reshape(-1, 1))
         selected_q = selected_q.squeeze()
         # norm_selected_q = (selected_q - torch.mean(selected_q)) / torch.std(selected_q)
