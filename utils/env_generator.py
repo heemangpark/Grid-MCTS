@@ -1,8 +1,5 @@
 import numpy as np
 
-from utils.arguments import maze_args
-from utils.visualize import vis_map_only
-
 
 def create(args):
     m = np.zeros((args['size'], args['size']))
@@ -10,8 +7,8 @@ def create(args):
     m[o] = args['cell_type']['obstacle']
 
     rand_loc = np.random.choice(args['size'], 4)
-    if (rand_loc[0] == rand_loc[2]) and (rand_loc[1] == rand_loc[3]):
-        while (rand_loc[0] != rand_loc[2]) and (rand_loc[1] != rand_loc[3]):
+    if all(rand_loc[:2] == rand_loc[-2:]):
+        while all(rand_loc[:2] == rand_loc[-2:]):
             rand_loc = np.random.choice(args['size'], 4)
 
     s = rand_loc[:2]
@@ -20,7 +17,6 @@ def create(args):
     m[tuple(g)] = args['cell_type']['goal']
 
     return s, g, m
-
 
 # for id in range(100):
 #     """create instance"""

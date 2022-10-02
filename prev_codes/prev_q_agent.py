@@ -4,7 +4,7 @@ import dgl
 import torch
 import torch.nn as nn
 
-from rl.gnn import GNN
+from prev_codes.gnn import GNN
 from rl.replaymemory import ReplayMemory
 
 

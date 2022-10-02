@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from env.maze_func import transition_loc
@@ -15,8 +14,8 @@ def children(graph, idx): return list(graph.successors(idx))
 def parent(graph, idx): return list(graph.predecessors(idx))[0]
 
 
-def select(graph, root_idx, c=2):
-    score = [(graph.edges[edge_idx]['Q']) + c * np.sqrt(
+def select(graph, root_idx, c=10):
+    score = [(graph.edges[edge_idx]['R']) + c * np.sqrt(
         np.log(graph.nodes[root_idx]['N'] + 1e-4) / (graph.edges[edge_idx]['n'] + 1)) for edge_idx in
              list(graph.edges(root_idx))]
     if np.var(score) == 0:
@@ -45,6 +44,6 @@ def backup(goal, graph, leaf_idx):
         graph.nodes[parent_idx]['N'] += 1
         graph.edges[parent_idx, leaf_idx]['R'] += distance_score(leaf_state, goal)
         graph.edges[parent_idx, leaf_idx]['n'] += 1
-        graph.edges[parent_idx, leaf_idx]['Q'] = graph.edges[parent_idx, leaf_idx]['R'] / graph.edges[parent_idx,
-                                                                                                      leaf_idx]['n']
+        graph.edges[parent_idx, leaf_idx]['Q'] = graph.edges[parent_idx, leaf_idx]['R'] / graph.edges[
+            parent_idx, leaf_idx]['n']
         leaf_idx = parent_idx

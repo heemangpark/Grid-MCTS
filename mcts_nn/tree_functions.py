@@ -51,7 +51,7 @@ def parent(graph, idx): return list(graph.predecessors(idx))[0]
 
 
 def select(graph, root_idx, c=1):
-    score = [(graph.edges[edge_idx]['Q']) + c * np.sqrt(
+    score = [(graph.edges[edge_idx]['R']) + c * np.sqrt(
         np.log(graph.nodes[root_idx]['N'] + 1e-4) / (graph.edges[edge_idx]['n'] + 1)) for edge_idx in
              list(graph.edges(root_idx))]
     if np.var(score) == 0:
@@ -73,12 +73,12 @@ def expand(graph, idx, avail_actions):
     return leaves
 
 
-def backup(agent, maze, base_graph, graph, leaf_idx):
+def backup(agent, base_graph, graph, leaf_idx):
     while leaf_idx != 1:
         leaf_state = list(graph.nodes[leaf_idx]['state'])
         parent_idx = parent(graph, leaf_idx)
         graph.nodes[parent_idx]['N'] += 1
-        q = agent.step(convert_maze_to_g_loc(leaf_state, base_graph), mask(leaf_state, maze), tree_search=True)
+        q = agent.step(convert_maze_to_g_loc(leaf_state, base_graph), [True for _ in range(4)], tree_search=True)
         graph.edges[parent_idx, leaf_idx]['R'] += q.mean()
         graph.edges[parent_idx, leaf_idx]['n'] += 1
         graph.edges[parent_idx, leaf_idx]['Q'] = graph.edges[parent_idx, leaf_idx]['R'] / graph.edges[parent_idx,

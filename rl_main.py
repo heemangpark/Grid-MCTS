@@ -9,8 +9,8 @@ from tqdm import tqdm
 
 
 def main(args, rand=False):
-    # wandb.init(project='IoT', entity='heemang')
-    wandb.init(project="etri", entity="curie_ahn", config=args)
+    wandb.init(project='IoT', entity='heemang')
+    # wandb.init(project="etri", entity="curie_ahn", config=args)
     agent = QAgent(in_dim=2, embedding_dim=64)
     agent.to(agent.device)
     env = maze_env(args, T=args['size'] * 4)
@@ -18,7 +18,7 @@ def main(args, rand=False):
     n_ep = 100000
     for e in tqdm(range(n_ep)):
         if rand:
-            env.args['size'] = random.choice([5, 10, 15, 10])
+            env.args['size'] = random.choice([5, 10, 15, 20])
             env.T = env.args['size'] * 4
 
         g, mask = env.reset()

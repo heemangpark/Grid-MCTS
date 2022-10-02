@@ -1,7 +1,7 @@
 import networkx as nx
 
 from env.maze_func import get_avail_action, terminated
-from monte_carlo_tree_search.tree_functions import expand, children, select, backup
+from mcts.tree_functions import expand, children, select, backup
 
 
 class Tree:
@@ -10,7 +10,6 @@ class Tree:
         self.maze = maze
         self.g = nx.DiGraph()
         self.g.add_node(1, state=start, N=1)
-        _ = expand(self.g, 1, get_avail_action(self.maze, start))
         self.state_seq, self.act_seq = None, None
 
     def grow(self):
@@ -26,6 +25,7 @@ class Tree:
                 curr_state = list(self.g.nodes[idx]['state'])
                 state_seq.append(curr_state)
 
+            self.maze[tuple(self.g.nodes[idx]['state'])] = 1
             self.state_seq = state_seq
             self.act_seq = act_seq
 
