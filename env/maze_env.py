@@ -1,10 +1,14 @@
-from copy import deepcopy, copy
-
 import dgl
 import numpy as np
 import torch
 
+from copy import deepcopy, copy
 from env.maze_func import UP, DOWN, LEFT, RIGHT, move
+
+EMPTY = 0
+OBSTACLE = 1
+GOAL = 2
+AGENT = 3
 
 
 class maze_env:
@@ -29,7 +33,7 @@ class maze_env:
             self.maze = maze
         else:
             maze = np.zeros((self.size, self.size))
-            obstacle = np.random.random((self.size, self.size)) < self.args['difficulty']
+            obstacle = np.random.random((self.size, self.size)) < self.difficulty
             maze[obstacle] = self.cell_type['obstacle']
 
             rand_loc = np.random.choice(self.size, 4)
@@ -161,8 +165,49 @@ class maze_env:
         return g
 
 
+def check_feasibility(maze, ag_loc):
+    size = maze.shape[0]
+    goal_loc = (maze == GOAL).nonzero()
+    goal_loc = np.array(goal_loc).reshape(-1)
+    visited = np.zeros(maze.shape, bool)
+
+    locs = [ag_loc]
+    feasible = False
+    while len(locs) > 0:
+        temp_loc = locs.pop()
+        for a in ([0, 1], [0, -1], [1, 0], [-1, 0]):
+            new_loc = temp_loc + np.array(a)
+            if all(new_loc >= 0) and all(new_loc < size):
+                if maze[tuple(new_loc)] == OBSTACLE:
+                    continue
+
+                if not visited[tuple(new_loc)]:
+                    visited[tuple(new_loc)] = True
+                    locs.append(new_loc)
+
+                if all(new_loc == goal_loc):
+                    feasible = True
+                    break
+
+    return feasible
+
+
 if __name__ == '__main__':
     from utils.arguments import maze_args
+    from utils.visualize import vis_map_only
+    from time import time
+
+    EMPTY = 0
+    OBSTACLE = 1
+    GOAL = 2
+    AGENT = 3
 
     env = maze_env(maze_args)
+    env.size = 20
+    env.difficulty = 0.5
     env.reset()
+    vis_map_only(env.maze, env.ag_loc, env.goal_loc)
+    start_time = time()
+    feasible = check_feasibility(env.maze, env.ag_loc)
+    print(feasible)
+    print(time() - start_time)
