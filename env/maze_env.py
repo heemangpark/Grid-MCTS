@@ -157,9 +157,11 @@ class maze_env:
         ag_type = self.cell_type['agent']
 
         g.ndata['init_nf'][-1] = torch.Tensor(self.ag_loc) / self.size
+        g.ndata['type'] = torch.Tensor([obs_type] * (n_nodes - 2) + [goal_type] + [ag_type]).reshape(-1, 1)
 
         g.add_edges(range(n_nodes), n_nodes - 1)
-        g.ndata['type'] = torch.Tensor([obs_type] * (n_nodes - 2) + [goal_type] + [ag_type]).reshape(-1, 1)
+        loc_gap = (g.ndata['init_nf'] - g.ndata['init_nf'][-1]).abs()
+        g.edata['init_ef'] = loc_gap.sum(-1, keepdims=True)  # Manhatten distance
         g.edata['type'] = torch.Tensor([obs_type] * (n_nodes - 2) + [goal_type] + [ag_type]).reshape(-1, 1)
 
         return g

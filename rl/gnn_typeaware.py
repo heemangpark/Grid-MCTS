@@ -32,7 +32,7 @@ class GNNLayer_typeaware(nn.Module):
 
         self.edge_update = nn.ModuleDict()
         for etype in edge_types:
-            self.edge_update[str(etype)] = nn.Sequential(nn.Linear(in_dim * 2, out_dim, bias=False),
+            self.edge_update[str(etype)] = nn.Sequential(nn.Linear(in_dim * 2 + 1, out_dim, bias=False),
                                                          nn.ReLU())
 
         self.node_update = nn.Sequential(nn.Linear(out_dim * len(edge_types), out_dim, bias=False),
@@ -65,8 +65,9 @@ class GNNLayer_typeaware(nn.Module):
     def message_func(self, edges, etype):
         src_nf = edges.src['nf']
         dst_nf = edges.dst['nf']
+        ef = edges.data['init_ef']
 
-        ef_in = torch.concat([src_nf, dst_nf], -1)
+        ef_in = torch.concat([src_nf, dst_nf, ef], -1)
         msg = self.edge_update[str(etype)](ef_in)
 
         return {'msg{}'.format(etype): msg}
