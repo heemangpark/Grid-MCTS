@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def vis_route(maze, seq, start, goal, id):
+def vis_route(maze, seq, start, goal, id=0):
     size = maze.shape[0]
     fig, ax = plt.subplots()
 
@@ -57,7 +57,7 @@ def vis_route(maze, seq, start, goal, id):
     fig.savefig('res_{}.png'.format(id))
 
 
-def vis_map_only(maze, start, goal, id):
+def vis_map_only(maze, start, goal, id=0):
     fig, ax = plt.subplots()
     size = maze.shape[0]
 
