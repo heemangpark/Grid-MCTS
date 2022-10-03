@@ -57,7 +57,7 @@ def vis_route(maze, seq, start, goal, id):
     fig.savefig('res_{}.png'.format(id))
 
 
-def vis_map_only(args, maze, start, goal, id):
+def vis_map_only(maze, start, goal, id):
     fig, ax = plt.subplots()
     size = maze.shape[0]
 
