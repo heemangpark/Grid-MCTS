@@ -3,22 +3,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def vis_route(args, maze, seq, start, goal, id):
+def vis_route(maze, seq, start, goal, id):
+    size = maze.shape[0]
     fig, ax = plt.subplots()
 
     ax.grid(False)
-    ax.set_xticks([i + .5 for i in range(args['size'])])
-    ax.set_yticks([i + .5 for i in range(args['size'])])
+    ax.set_xticks([i + .5 for i in range(size)])
+    ax.set_yticks([i + .5 for i in range(size)])
 
-    ax.set_xticklabels([int(i) for i in range(args['size'])])
-    ax.set_yticklabels([int(i) for i in range(args['size'])])
+    ax.set_xticklabels([int(i) for i in range(size)])
+    ax.set_yticklabels([int(i) for i in range(size)])
     ax.set_aspect('equal', adjustable='box')
 
-    for i in range(args['size'] + 1):
-        ax.plot([0, args['size']], [i, i], 'k')
+    for i in range(size + 1):
+        ax.plot([0, size], [i, i], 'k')
 
-    for j in range(args['size'] + 1):
-        ax.plot([j, j], [0, args['size']], 'k')
+    for j in range(size + 1):
+        ax.plot([j, j], [0, size], 'k')
 
     o_x, o_y = maze.nonzero()
     for i, j in zip(o_x, o_y):
@@ -58,20 +59,21 @@ def vis_route(args, maze, seq, start, goal, id):
 
 def vis_map_only(args, maze, start, goal, id):
     fig, ax = plt.subplots()
+    size = maze.shape[0]
 
     ax.grid(False)
-    ax.set_xticks([i + .5 for i in range(args['size'])])
-    ax.set_yticks([i + .5 for i in range(args['size'])])
+    ax.set_xticks([i + .5 for i in range(size)])
+    ax.set_yticks([i + .5 for i in range(size)])
 
-    ax.set_xticklabels([int(i) for i in range(args['size'])])
-    ax.set_yticklabels([int(i) for i in range(args['size'])])
+    ax.set_xticklabels([int(i) for i in range(size)])
+    ax.set_yticklabels([int(i) for i in range(size)])
     ax.set_aspect('equal', adjustable='box')
 
-    for i in range(args['size'] + 1):
-        ax.plot([0, args['size']], [i, i], 'k')
+    for i in range(size + 1):
+        ax.plot([0, size], [i, i], 'k')
 
-    for j in range(args['size'] + 1):
-        ax.plot([j, j], [0, args['size']], 'k')
+    for j in range(size + 1):
+        ax.plot([j, j], [0, size], 'k')
 
     o_x, o_y = maze.nonzero()
     for i, j in zip(o_x, o_y):
