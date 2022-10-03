@@ -21,7 +21,7 @@ def evaluate(size, vis):
             g, mask = ng, n_mask
             if t:
                 break
-        vis_route(args, env.maze, seq, env.start_loc, env.goal_loc, eval_id + 1)
+        vis_route(env.maze, seq, env.start_loc, env.goal_loc, eval_id + 1)
 
 
 if __name__ == "__main__":
