@@ -8,7 +8,7 @@ from env.maze_func import UP, DOWN, LEFT, RIGHT, move
 
 
 class maze_env:
-    def __init__(self, args, **kwargs):
+    def __init__(self, args):
         self.args = args
         self.t = 0
         self.T = None

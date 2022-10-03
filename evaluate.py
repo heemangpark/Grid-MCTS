@@ -8,8 +8,8 @@ from utils.visualize import vis_route
 
 def evaluate(size, vis):
     args = maze_args
-    args['size'] = size
-    env = maze_env(args, T=4 * size)
+    env = maze_env(args)
+    env.size = size
 
     for eval_id in range(vis):
         g, mask = env.reset()
@@ -26,5 +26,5 @@ def evaluate(size, vis):
 
 if __name__ == "__main__":
     agent = QAgent(in_dim=2, embedding_dim=64)
-    agent.load_state_dict(torch.load('./saved/grid_random_99000.th', 'cuda'))
-    evaluate(size=20, vis=50)
+    agent.load_state_dict(torch.load('./saved/grid_random_73000.th', 'cuda'))
+    evaluate(size=10, vis=10)

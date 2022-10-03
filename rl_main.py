@@ -19,7 +19,6 @@ def main(args, rand=False):
     for e in tqdm(range(n_ep)):
         if rand:
             env.size = random.choice([5, 10, 15, 20])
-            env.T = env.size * 4
 
         g, mask = env.reset()
         R, ep_len = 0, 0
