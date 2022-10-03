@@ -5,7 +5,7 @@ import random
 from env.maze_env import maze_env
 from rl.q_agent_loc import QAgent
 from utils.arguments import maze_args
-from tqdm import tqdm
+# from tqdm import tqdm
 
 
 def main(args, rand=False):
@@ -13,7 +13,6 @@ def main(args, rand=False):
     wandb.init(project="etri", entity="curie_ahn", config=args)
     agent = QAgent(in_dim=2, embedding_dim=64)
     agent.to(agent.device)
-    agent.difficulty = 0.3
     env = maze_env(args)
 
     n_ep = 100000
@@ -34,9 +33,10 @@ def main(args, rand=False):
             g, mask = ng, n_mask
             R += r
             if t:
-                loss = agent.fit()
-                # print('EP{}, {} timestep, RWD:{:4d}, loss:{:04f}, epsilon:{:05f}'.format(e, ep_len, R, loss, agent.epsilon))
-                wandb.log({"loss": loss, "reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': e})
+                ret_dict = agent.fit()
+                exp_dict = {"reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': e}
+                wandb.log({**exp_dict, **ret_dict})
+                print({**exp_dict, **ret_dict})
                 break
 
         if e % 1000 == 0 and e > 0:

@@ -56,7 +56,7 @@ class QAgent(nn.Module):
                     action = q.argmax(-1)
                     self.q = q
 
-            self.epsilon = max(0.05, self.epsilon - 0.00001)
+            self.epsilon = max(0.05, self.epsilon - 0.000003)
 
         return action.item()
 
@@ -85,7 +85,7 @@ class QAgent(nn.Module):
 
     def fit(self):
         if len(self.memory) < self.batch_size:
-            return 0
+            return {'loss': 0}
         self.to(self.device)
         g, a, mask, r, ng, n_mask, t = self.memory.sample(self.batch_size)
 
@@ -120,7 +120,7 @@ class QAgent(nn.Module):
         self.update_target(self.gnn, self.gnn_target, .5)
         self.update_target(self.q_func, self.q_func_target, .5)
 
-        return loss.item()
+        return {'loss': loss.item(), 'target_mean': target.mean().item(), 'selected_mean': selected_q.mean().item()}
 
     def update_target(self, src, target, tau):
         for target_param, src_param in zip(target.parameters(), src.parameters()):
