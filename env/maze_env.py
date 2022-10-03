@@ -8,35 +8,40 @@ from env.maze_func import UP, DOWN, LEFT, RIGHT, move
 
 
 class maze_env:
-    def __init__(self, args, T):
+    def __init__(self, args, **kwargs):
         self.args = args
         self.t = 0
-        self.T = T
+        self.T = None
         self.ag_loc, self.start_loc, self.goal_loc = None, None, None
         self.maze, self.base_graph = None, None
         self.env_import = False
 
-    def reset(self):
+        for key in args:
+            setattr(self, key, args[key])
+
+    def reset(self, size=None):
+        if size is not None:
+            self.size = size
         self.t = 0
         if self.env_import:
             id = np.random.choice(list(set(range(1, 101)) - {"user_define"}))
             maze = np.load('../utils/sample_maps/maze_{}.npy'.format(id))
             self.maze = maze
         else:
-            maze = np.zeros((self.args['size'], self.args['size']))
-            obstacle = np.random.random((self.args['size'], self.args['size'])) < self.args['difficulty']
-            maze[obstacle] = self.args['cell_type']['obstacle']
+            maze = np.zeros((self.size, self.size))
+            obstacle = np.random.random((self.size, self.size)) < self.args['difficulty']
+            maze[obstacle] = self.cell_type['obstacle']
 
-            rand_loc = np.random.choice(self.args['size'], 4)
+            rand_loc = np.random.choice(self.size, 4)
             if rand_loc[0] == rand_loc[2] and rand_loc[1] == rand_loc[3]:
                 while not rand_loc[0] == rand_loc[2] and rand_loc[1] == rand_loc[3]:
-                    rand_loc = np.random.choice(self.args['size'], 4)
+                    rand_loc = np.random.choice(self.size, 4)
 
             self.ag_loc = rand_loc[:2]
             self.start_loc = rand_loc[:2]
             self.goal_loc = rand_loc[-2:]
-            maze[tuple(self.ag_loc)] = self.args['cell_type']['empty']
-            maze[tuple(self.goal_loc)] = self.args['cell_type']['goal']
+            maze[tuple(self.ag_loc)] = self.cell_type['empty']
+            maze[tuple(self.goal_loc)] = self.cell_type['goal']
             self.maze = maze
 
         self.base_graph, state = self.generate_base_graph_loc(maze), copy(self.maze)
@@ -45,18 +50,19 @@ class maze_env:
         if self.mask(state).sum() == 4:
             ret_maze, ret_mask = self.reset()
 
+        self.T = self.size * 4
         return ret_maze, ret_mask
 
     def mask(self, maze):
         mask = []
         for a in [UP, DOWN, LEFT, RIGHT]:  # 상 하 좌 우
-            if (0 <= list(self.ag_loc + move[a])[0] < self.args['size']) and (
-                    0 <= list(self.ag_loc + move[a])[1] < self.args['size']):
-                if maze[tuple(self.ag_loc + move[a])] == self.args['cell_type']['empty']:
+            if (0 <= list(self.ag_loc + move[a])[0] < self.size) and (
+                    0 <= list(self.ag_loc + move[a])[1] < self.size):
+                if maze[tuple(self.ag_loc + move[a])] == self.cell_type['empty']:
                     m = False
-                elif maze[tuple(self.ag_loc + move[a])] == self.args['cell_type']['obstacle']:
+                elif maze[tuple(self.ag_loc + move[a])] == self.cell_type['obstacle']:
                     m = True
-                elif maze[tuple(self.ag_loc + move[a])] == self.args['cell_type']['goal']:
+                elif maze[tuple(self.ag_loc + move[a])] == self.cell_type['goal']:
                     m = False
                 else:
                     m = None
@@ -73,7 +79,7 @@ class maze_env:
         terminated = False
         reward = -1
 
-        if state[tuple(self.ag_loc)] == self.args['cell_type']['goal']:
+        if state[tuple(self.ag_loc)] == self.cell_type['goal']:
             terminated = True
             reward = 10
         else:
@@ -98,7 +104,7 @@ class maze_env:
     #
     #     vertical_from = np.arange(n_row * n_col).reshape(n_row, -1)[:-1]
     #     vertical_from = vertical_from.reshape(-1)
-    #     vertical_to = vertical_from + self.args['size']
+    #     vertical_to = vertical_from + self.size
     #     g.add_edges(vertical_from, vertical_to)
     #     g.add_edges(vertical_to, vertical_from)
     #
@@ -114,8 +120,8 @@ class maze_env:
     def generate_base_graph_loc(self, maze):
         g = dgl.DGLGraph()
 
-        obs_type = self.args['cell_type']['obstacle']
-        goal_type = self.args['cell_type']['goal']
+        obs_type = self.cell_type['obstacle']
+        goal_type = self.cell_type['goal']
         obstacle_x, obstacle_y = (maze == obs_type).nonzero()
         goal_x, goal_y = (maze == goal_type).nonzero()
 
@@ -125,7 +131,7 @@ class maze_env:
         obstacle_nf = np.stack([obstacle_x, obstacle_y], -1)  # coordination of obstacles
         goal_nf = np.stack([goal_x, goal_y], -1)  # coordination of goal
 
-        init_nf = np.concatenate([obstacle_nf, goal_nf], 0) / self.args['size']
+        init_nf = np.concatenate([obstacle_nf, goal_nf], 0) / self.size
         g.ndata['init_nf'] = torch.Tensor(init_nf)
         g.ndata['type'] = torch.Tensor([obs_type] * n_obstacle + [goal_type]).reshape(-1, 1)
 
@@ -142,14 +148,21 @@ class maze_env:
         g.add_nodes(1)
         n_nodes = g.number_of_nodes()
 
-        obs_type = self.args['cell_type']['obstacle']
-        goal_type = self.args['cell_type']['goal']
-        ag_type = self.args['cell_type']['agent']
+        obs_type = self.cell_type['obstacle']
+        goal_type = self.cell_type['goal']
+        ag_type = self.cell_type['agent']
 
-        g.ndata['init_nf'][-1] = torch.Tensor(self.ag_loc) / self.args['size']
+        g.ndata['init_nf'][-1] = torch.Tensor(self.ag_loc) / self.size
 
         g.add_edges(range(n_nodes), n_nodes - 1)
         g.ndata['type'] = torch.Tensor([obs_type] * (n_nodes - 2) + [goal_type] + [ag_type]).reshape(-1, 1)
         g.edata['type'] = torch.Tensor([obs_type] * (n_nodes - 2) + [goal_type] + [ag_type]).reshape(-1, 1)
 
         return g
+
+
+if __name__ == '__main__':
+    from utils.arguments import maze_args
+
+    env = maze_env(maze_args)
+    env.reset()

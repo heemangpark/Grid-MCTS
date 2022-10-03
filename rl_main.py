@@ -9,17 +9,17 @@ from tqdm import tqdm
 
 
 def main(args, rand=False):
-    wandb.init(project='IoT', entity='heemang')
+    # wandb.init(project='IoT', entity='heemang')
     # wandb.init(project="etri", entity="curie_ahn", config=args)
     agent = QAgent(in_dim=2, embedding_dim=64)
     agent.to(agent.device)
-    env = maze_env(args, T=args['size'] * 4)
+    env = maze_env(args)
 
     n_ep = 100000
     for e in tqdm(range(n_ep)):
         if rand:
-            env.args['size'] = random.choice([5, 10, 15, 20])
-            env.T = env.args['size'] * 4
+            env.size = random.choice([5, 10, 15, 20])
+            env.T = env.size * 4
 
         g, mask = env.reset()
         R, ep_len = 0, 0
@@ -35,9 +35,9 @@ def main(args, rand=False):
             R += r
             if t:
                 loss = agent.fit()
-                # print('EP {}, {} timesteps,  RWD:{:4d}, loss:{:04f}, epsilon:{:05f}'
-                #       .format(e, ep_len, R, loss, agent.epsilon))
-                wandb.log({"loss": loss, "reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': e})
+                print('EP {}, {} timesteps,  RWD:{:4d}, loss:{:04f}, epsilon:{:05f}'
+                      .format(e, ep_len, R, loss, agent.epsilon))
+                # wandb.log({"loss": loss, "reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': e})
                 break
 
         if e % 1000 == 0 and e > 0:
@@ -45,4 +45,4 @@ def main(args, rand=False):
 
 
 if __name__ == '__main__':
-    main(maze_args)
+    main(maze_args, rand=False)
