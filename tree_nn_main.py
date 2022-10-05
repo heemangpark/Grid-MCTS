@@ -11,14 +11,15 @@ from utils.visualize import vis_route
 if __name__ == "__main__":
     for id in range(10):
         env = maze_env(maze_args)
-        env.size = 5
+        env.size = 10
+        max_step = 100
 
-        agent = QAgent(in_dim=2, embedding_dim=64)
-        agent.load_state_dict(torch.load('./saved/grid_random2_22000.th', 'cuda'))
+        agent = QAgent()
+        agent.load_state_dict(torch.load('./sacred/rand_best.th', 'cuda'))
 
         g, mask = env.reset()
         tree = Tree(env, agent)
-        tree.grow()
+        tree.grow(max_step=max_step)
         vis_route(env.maze, tree.state_seq, env.start_loc, env.goal_loc, 'tree_{}'.format(id + 1))
 
     # nx.write_gpickle(tree, './tree/tree.nx')
