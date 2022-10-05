@@ -1,6 +1,7 @@
 import networkx as nx
 
 from env.maze_func import get_avail_action
+from env.maze_env import get_mask
 from mcts_nn.tree_functions import mask4tree, expand, children, select, backup
 
 
@@ -13,7 +14,7 @@ class Tree:
         self.g.add_node(1, state=self.env.start_loc, visited=1, Q=0)
         self.state_seq, self.act_seq = None, None
 
-    def grow(self):
+    def grow(self, max_step=500):
         step = 1
         while True:
             idx = 1
@@ -22,7 +23,7 @@ class Tree:
 
             """selection"""
             while len(children(self.g, idx)) != 0:
-                idx, a = select(self.g, idx)
+                idx, a = select(self.g, idx, c=10)
                 act_seq.append(a)
                 curr_state = list(self.g.nodes[idx]['state'])
                 state_seq.append(curr_state)
@@ -43,12 +44,18 @@ class Tree:
             """backup"""
             for leaf in leaves:
                 self.env.ag_loc = self.g.nodes[leaf]['state']
-                leaf_r = 1000 if self.env.maze[tuple(self.env.ag_loc)] == 2 else -1
+                dist_to_goal = abs(self.env.ag_loc - self.env.goal_loc).sum()
+                if dist_to_goal == 0:
+                    leaf_r = 10
+                elif dist_to_goal == 1:
+                    leaf_r = 0
+                else:
+                    leaf_r = -1
                 leaf_q = self.agent.step(self.env.convert_maze_to_g_loc(), mask4tree(self.env), tree_search=True)
                 backup(self.g, leaf, leaf_r, leaf_q)
 
             step += 1
-            if step >= 500:
+            if step >= max_step:
                 break
 
             # """visualize per step"""

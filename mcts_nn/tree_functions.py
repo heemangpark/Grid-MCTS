@@ -67,7 +67,7 @@ def backup(graph, leaf_idx, r_value, q_value):
         parent_idx = parent(graph, leaf_idx)
         graph.nodes[parent_idx]['visited'] += 1
         graph.nodes[leaf_idx]['visited'] += 1
-        graph.nodes[leaf_idx]['Q'] += q_value.mean() * 0.99 ** hop / graph.nodes[leaf_idx]['visited']
+        graph.nodes[leaf_idx]['Q'] += (r_value + q_value.max() * 0.99 ** hop) / graph.nodes[leaf_idx]['visited']
         # graph.edges[parent_idx, leaf_idx]['R'] += q_value.mean() * 0.99 ** hop
         # graph.edges[parent_idx, leaf_idx]['n'] += 1
         # graph.edges[parent_idx, leaf_idx]['Q'] = graph.edges[parent_idx, leaf_idx]['R'] / \
@@ -76,5 +76,5 @@ def backup(graph, leaf_idx, r_value, q_value):
         hop += 1
         if leaf_idx == 1:
             graph.nodes[leaf_idx]['visited'] += 1
-            graph.nodes[leaf_idx]['Q'] += q_value.mean() * 0.99 ** hop / graph.nodes[leaf_idx]['visited']
+            graph.nodes[leaf_idx]['Q'] += (r_value + q_value.max() * 0.99 ** hop) / graph.nodes[leaf_idx]['visited']
             break
