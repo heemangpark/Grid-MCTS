@@ -1,22 +1,18 @@
 import networkx as nx
 
 from env.maze_func import get_avail_action
-from mcts_nn.tree_functions import expand, children, select, backup
+from mcts_nn.tree_functions import mask4tree, expand, children, select, backup
 from utils.visualize import vis_route
 
 
 class Tree:
-    def __init__(self, args, env, agent, base_graph):
-        self.idx = 1
-        self.start = env.start_loc
-        self.goal = env.goal_loc
-        self.maze = env.maze
-        self.g = nx.DiGraph()
-        self.g.add_node(1, state=self.start, N=1)
-        self.state_seq, self.act_seq = None, None
-        self.base_graph = base_graph
+    def __init__(self, env, agent):
+        self.env = env
         self.agent = agent
-        self.args = args
+        self.args = env.args
+        self.g = nx.DiGraph()
+        self.g.add_node(1, state=self.env.start_loc, N=1)
+        self.state_seq, self.act_seq = None, None
 
     def grow(self):
         step = 1
@@ -32,26 +28,27 @@ class Tree:
                 curr_state = list(self.g.nodes[idx]['state'])
                 state_seq.append(curr_state)
 
-            # self.maze[tuple(self.g.nodes[idx]['state'])] = 1
             self.state_seq = state_seq
             self.act_seq = act_seq
 
             """terminal check on selected leaf"""
-            if all(self.goal == self.g.nodes[idx]['state']):
+            if all(self.env.goal_loc == self.g.nodes[idx]['state']):
                 break
             else:
                 pass
 
             """expansion"""
             curr_state = self.g.nodes[idx]['state']
-            leaves = expand(self.g, idx, avail_actions=get_avail_action(self.maze, curr_state))
+            leaves = expand(self.g, idx, avail_actions=get_avail_action(self.env.maze, curr_state))
 
             """backup"""
             for leaf in leaves:
-                backup(self.agent, self.base_graph, self.g, leaf)
+                self.env.ag_loc = self.g.nodes[leaf]['state']
+                leaf_r = 1000 if self.env.maze[tuple(self.env.ag_loc)] == 2 else -1
+                leaf_q = self.agent.step(self.env.convert_maze_to_g_loc(), mask4tree(self.env), tree_search=True)
+                backup(self.g, leaf, leaf_r, leaf_q)
 
             step += 1
             """visualize per step"""
             if step % 50 == 0:
-                vis_route(self.args, self.maze, self.state_seq, self.start, self.goal, step)
-                print(idx)
+                vis_route(self.env.maze, self.state_seq, self.env.start_loc, self.env.goal_loc, step)

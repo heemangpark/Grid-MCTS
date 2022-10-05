@@ -26,5 +26,5 @@ def evaluate(size, vis):
 
 if __name__ == "__main__":
     agent = QAgent(in_dim=2, embedding_dim=64)
-    agent.load_state_dict(torch.load('./saved/grid_random_73000.th', 'cuda'))
-    evaluate(size=10, vis=10)
+    agent.load_state_dict(torch.load('./saved/grid_5_99000.th', 'cuda'))
+    evaluate(size=20, vis=10)

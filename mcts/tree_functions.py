@@ -3,11 +3,6 @@ import numpy as np
 from env.maze_func import transition_loc
 
 
-def distance_score(loc1, loc2):
-    dist = -np.sqrt((loc1[0] - loc2[0]) ** 2 + (loc1[1] - loc2[1]) ** 2)
-    return 10 if dist > -1 else dist
-
-
 def children(graph, idx): return list(graph.successors(idx))
 
 
@@ -37,13 +32,15 @@ def expand(graph, idx, avail_actions):
     return leaves
 
 
-def backup(goal, graph, leaf_idx):
+def backup(goal, graph, leaf_idx, reward):
+    hop = 0
     while leaf_idx != 1:
         leaf_state = graph.nodes[leaf_idx]['state']
         parent_idx = parent(graph, leaf_idx)
         graph.nodes[parent_idx]['N'] += 1
-        graph.edges[parent_idx, leaf_idx]['R'] += distance_score(leaf_state, goal)
+        graph.edges[parent_idx, leaf_idx]['R'] += reward * 0.99 ** hop
         graph.edges[parent_idx, leaf_idx]['n'] += 1
         graph.edges[parent_idx, leaf_idx]['Q'] = graph.edges[parent_idx, leaf_idx]['R'] / graph.edges[
             parent_idx, leaf_idx]['n']
         leaf_idx = parent_idx
+        hop += 1

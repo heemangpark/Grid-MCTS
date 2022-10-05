@@ -1,8 +1,9 @@
+from copy import deepcopy, copy
+
 import dgl
 import numpy as np
 import torch
 
-from copy import deepcopy, copy
 from env.maze_func import UP, DOWN, LEFT, RIGHT, move
 
 EMPTY = 0
@@ -30,24 +31,24 @@ class maze_env:
             self.size = size
         self.t = 0
 
-        if self.env_import:
-            id = np.random.choice(list(set(range(1, 101)) - {"user_define"}))
-            maze = np.load('../utils/sample_maps/maze_{}.npy'.format(id))
-            self.maze = maze
-            self.size = maze.shape[0]
-            # TODO: AG loc? Goal loc: start loc?
-        else:
-            maze, ag_loc, start_loc, goal_loc = generate_maze(self.size, self.difficulty)
-            if not check_feasibility(maze, ag_loc):
-                while True:
-                    maze, ag_loc, start_loc, goal_loc = generate_maze(self.size, self.difficulty)
-                    if check_feasibility(maze, ag_loc):
-                        break
+        # if self.env_import:
+        #     id = np.random.choice(list(set(range(1, 101)) - {"user_define"}))
+        #     maze = np.load('../utils/sample_maps/maze_{}.npy'.format(id))
+        #     self.maze = maze
+        #     self.size = maze.shape[0]
+        # TODO: AG loc? Goal loc: start loc?
 
-            self.maze = maze
-            self.ag_loc = ag_loc
-            self.start_loc = start_loc
-            self.goal_loc = goal_loc
+        maze, ag_loc, start_loc, goal_loc = generate_maze(self.size, self.difficulty)
+        if not check_feasibility(maze, ag_loc):
+            while True:
+                maze, ag_loc, start_loc, goal_loc = generate_maze(self.size, self.difficulty)
+                if check_feasibility(maze, ag_loc):
+                    break
+
+        self.maze = maze
+        self.ag_loc = ag_loc
+        self.start_loc = start_loc
+        self.goal_loc = goal_loc
 
         self.base_graph, state = self.generate_base_graph_loc(maze), copy(self.maze)
         ret_maze, ret_mask = self.convert_maze_to_g_loc(), get_mask(state, self.ag_loc)
@@ -140,7 +141,7 @@ class maze_env:
 
         g.add_edges(range(n_nodes), n_nodes - 1)
         loc_gap = (g.ndata['init_nf'] - g.ndata['init_nf'][-1]).abs()
-        g.edata['init_ef'] = loc_gap.sum(-1, keepdims=True)  # Manhatten distance
+        g.edata['init_ef'] = loc_gap.sum(-1, keepdims=True)  # Manhattan distance
         g.edata['type'] = torch.Tensor([obs_type] * (n_nodes - 2) + [goal_type] + [ag_type]).reshape(-1, 1)
 
         return g

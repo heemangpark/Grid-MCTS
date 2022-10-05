@@ -1,16 +1,19 @@
+import random
+
 import torch
 import wandb
-import random
 
 from env.maze_env import maze_env
 from rl.q_agent_loc import QAgent
 from utils.arguments import maze_args
+
+
 # from tqdm import tqdm
 
 
 def main(args, rand=False):
     # wandb.init(project='IoT', entity='heemang')
-    wandb.init(project="etri", entity="curie_ahn", config=args)
+    # wandb.init(project="etri", entity="curie_ahn", config=args)
     agent = QAgent(in_dim=2, embedding_dim=64)
     agent.to(agent.device)
     env = maze_env(args)
@@ -34,8 +37,8 @@ def main(args, rand=False):
             R += r
             if t:
                 ret_dict = agent.fit()
-                exp_dict = {"reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'timestep': e}
-                wandb.log({**exp_dict, **ret_dict})
+                exp_dict = {"reward": R, 'ep_len': ep_len, 'epsilon': agent.epsilon, 'episode': e}
+                # wandb.log({**exp_dict, **ret_dict})
                 print({**exp_dict, **ret_dict})
                 break
 
@@ -44,4 +47,4 @@ def main(args, rand=False):
 
 
 if __name__ == '__main__':
-    main(maze_args, rand=True)
+    main(maze_args, rand=False)

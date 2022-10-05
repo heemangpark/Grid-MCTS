@@ -1,7 +1,4 @@
-from copy import deepcopy
-
 import numpy as np
-import torch
 
 from env.maze_func import transition_loc
 
@@ -11,29 +8,17 @@ def distance_score(loc1, loc2):
     return 10 if dist > -1 else dist
 
 
-def convert_maze_to_g_loc(ag_loc, base_graph):
-    g = deepcopy(base_graph)
-    g.add_nodes(1)
-    n_nodes = g.number_of_nodes()
-    g.ndata['init_nf'][-1] = torch.Tensor(ag_loc) / 20
-    g.add_edges(range(n_nodes), n_nodes - 1)
-    g.ndata['type'] = torch.Tensor([1] * (n_nodes - 2) + [2] + [3]).reshape(-1, 1)
-    g.edata['type'] = torch.Tensor([1] * (n_nodes - 2) + [2] + [3]).reshape(-1, 1)
-
-    return g
-
-
-def mask(ag_loc, maze):
+def mask4tree(env):
     mask = []
     move = np.array([[-1, 0], [1, 0], [0, -1], [0, 1]])
     for a in [0, 1, 2, 3]:  # 상 하 좌 우
-        if (0 <= list(ag_loc + move[a])[0] < 20) and (
-                0 <= list(ag_loc + move[a])[1] < 20):
-            if maze[tuple(ag_loc + move[a])] == 0:
+        if (0 <= (env.ag_loc + move[a])[0] < env.size) and (
+                0 <= (env.ag_loc + move[a])[1] < env.size):
+            if env.maze[tuple(env.ag_loc + move[a])] == 0:
                 m = True
-            elif maze[tuple(ag_loc + move[a])] == 1:
+            elif env.maze[tuple(env.ag_loc + move[a])] == 1:
                 m = False
-            elif maze[tuple(ag_loc + move[a])] == 2:
+            elif env.maze[tuple(env.ag_loc + move[a])] == 2:
                 m = True
             else:
                 m = None
@@ -50,7 +35,7 @@ def children(graph, idx): return list(graph.successors(idx))
 def parent(graph, idx): return list(graph.predecessors(idx))[0]
 
 
-def select(graph, root_idx, c=1):
+def select(graph, root_idx, c=2):
     score = [(graph.edges[edge_idx]['R']) + c * np.sqrt(
         np.log(graph.nodes[root_idx]['N'] + 1e-4) / (graph.edges[edge_idx]['n'] + 1)) for edge_idx in
              list(graph.edges(root_idx))]
@@ -73,14 +58,14 @@ def expand(graph, idx, avail_actions):
     return leaves
 
 
-def backup(agent, base_graph, graph, leaf_idx):
+def backup(graph, leaf_idx, r_value, q_value):
+    hop = 0
     while leaf_idx != 1:
-        leaf_state = list(graph.nodes[leaf_idx]['state'])
         parent_idx = parent(graph, leaf_idx)
         graph.nodes[parent_idx]['N'] += 1
-        q = agent.step(convert_maze_to_g_loc(leaf_state, base_graph), [True for _ in range(4)], tree_search=True)
-        graph.edges[parent_idx, leaf_idx]['R'] += q.mean()
+        graph.edges[parent_idx, leaf_idx]['R'] += q_value.mean() * 0.99 ** hop
         graph.edges[parent_idx, leaf_idx]['n'] += 1
-        graph.edges[parent_idx, leaf_idx]['Q'] = graph.edges[parent_idx, leaf_idx]['R'] / graph.edges[parent_idx,
-                                                                                                      leaf_idx]['n']
+        # graph.edges[parent_idx, leaf_idx]['Q'] = graph.edges[parent_idx, leaf_idx]['R'] / \
+        #                                          graph.edges[parent_idx, leaf_idx]['n']
         leaf_idx = parent_idx
+        hop += 1
