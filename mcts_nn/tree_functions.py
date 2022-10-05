@@ -8,17 +8,18 @@ def distance_score(loc1, loc2):
     return 10 if dist > -1 else dist
 
 
-def mask4tree(env):
+def mask4tree(maze, loc):
     mask = []
+    size = maze.shape[0]
     move = np.array([[-1, 0], [1, 0], [0, -1], [0, 1]])
     for a in [0, 1, 2, 3]:  # 상 하 좌 우
-        if (0 <= (env.ag_loc + move[a])[0] < env.size) and (
-                0 <= (env.ag_loc + move[a])[1] < env.size):
-            if env.maze[tuple(env.ag_loc + move[a])] == 0:
+        if (0 <= (loc + move[a])[0] < size) and (
+                0 <= (loc + move[a])[1] < size):
+            if maze[tuple(loc + move[a])] == 0:
                 m = True
-            elif env.maze[tuple(env.ag_loc + move[a])] == 1:
+            elif maze[tuple(loc + move[a])] == 1:
                 m = False
-            elif env.maze[tuple(env.ag_loc + move[a])] == 2:
+            elif maze[tuple(loc + move[a])] == 2:
                 m = True
             else:
                 m = None
