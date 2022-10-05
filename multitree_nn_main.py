@@ -6,7 +6,7 @@ from env.multi_env import maze_env
 from mcts_nn.tree_multi import MultiTree
 from rl.q_agent_loc import QAgent
 from utils.arguments import maze_args
-from utils.visualize import vis_route
+from utils.visualize import vis_route, vis_route_total
 
 if __name__ == "__main__":
     for id in range(1):
@@ -21,9 +21,13 @@ if __name__ == "__main__":
         g, mask = env.reset()
         tree = MultiTree(env, agent, n_ag)
         tree.grow(max_step=max_step)
+
+        seq = []
         for i in range(n_ag):
             individual_seq = [s[i] for s in tree.state_seq]
+            seq.append(individual_seq)
             vis_route(env.maze[i], individual_seq, env.start_loc[i], env.goal_loc[i], 'tree_ag{}_{}'.format(i, id + 1))
 
+        vis_route_total(env.maze, seq, env.start_loc, env.goal_loc, 'tree_total')
     # nx.write_gpickle(tree, './tree/tree.nx')
     # np.save('./tree/route', np.array(tree.act_seq))

@@ -12,9 +12,8 @@ GOAL = 2
 AGENT = 3
 
 
-# TODO graph adaptation (only env currently)
 class maze_env:
-    def __init__(self, args, num_agent=3, num_goal=3):
+    def __init__(self, args, num_agent=3):
         self.args = args
         self.num_agent = num_agent
         self.difficulty = None
@@ -40,10 +39,10 @@ class maze_env:
             maze_zip, ag_loc, start_loc, goal_loc = generate_maze(self.size, self.difficulty, self.num_agent)
             _cf = [check_feasibility(maze_zip[idx], ag_loc[idx]) for idx in range(self.num_agent)]
 
-        self.maze = maze_zip
         self.ag_loc = ag_loc
         self.start_loc = start_loc
         self.goal_loc = goal_loc
+        self.maze = maze_zip
 
         self.base_graph = [self.generate_base_graph_loc(maze) for maze in self.maze]
         ret_g = [self.convert_maze_to_g_loc(i) for i in range(self.num_agent)]
