@@ -4,10 +4,13 @@ UP = 0
 DOWN = 1
 LEFT = 2
 RIGHT = 3
-move = np.array([[-1, 0], [1, 0], [0, -1], [0, 1]])
+move = np.array([[-1, 0], [1, 0], [0, -1], [0, 1], [0, 0]])
 
 
 def get_avail_action(maze, loc):
+    if maze[tuple(loc)] == 2:
+        return [4]
+
     in_bound = []
     size = len(maze)
     if loc[0] != 0:

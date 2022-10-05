@@ -13,7 +13,7 @@ def expand_joint(graph, idx, joint_avail_actions):
         new_child_idx = len(graph) + 1
         leaves.append(new_child_idx)
         graph.add_node(new_child_idx, state=next_joint_state, visited=0, Q=0)
-        graph.add_edge(idx, len(graph), a=[['up', 'down', 'left', 'right'][action] for action in joint_action])
+        graph.add_edge(idx, len(graph), a=[['up', 'down', 'left', 'right', 't'][action] for action in joint_action])
     return leaves
 
 

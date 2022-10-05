@@ -35,6 +35,7 @@ class MultiTree:
 
             """terminal check on selected leaf"""
             if self.env.goal_loc == self.g.nodes[idx]['state']:
+                print()
                 break
             else:
                 pass
@@ -52,7 +53,7 @@ class MultiTree:
                 penalty = 0
                 for loc in self.env.ag_loc:
                     if temp_maze[tuple(loc)] == 1:
-                        penalty = -100
+                        penalty = -10
                         break
                     temp_maze[tuple(loc)] = 1
 
