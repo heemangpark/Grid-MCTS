@@ -14,7 +14,7 @@ AGENT = 3
 
 # TODO graph adaptation (only env currently)
 class maze_env:
-    def __init__(self, args, num_agent=3):
+    def __init__(self, args, num_agent=3, num_goal=3):
         self.args = args
         self.num_agent = num_agent
         self.difficulty = None
@@ -34,24 +34,24 @@ class maze_env:
         self.t = 0
         self.T = self.size * 4
 
-        maze, ag_loc, start_loc, goal_loc = generate_maze(self.size, self.difficulty, self.num_agent)
-        _cf = [check_feasibility(maze, ag_loc[idx]) for idx in range(self.num_agent)]
+        maze_zip, ag_loc, start_loc, goal_loc = generate_maze(self.size, self.difficulty, self.num_agent)
+        _cf = [check_feasibility(maze_zip[idx], ag_loc[idx]) for idx in range(self.num_agent)]
         while not all(_cf):
-            maze, ag_loc, start_loc, goal_loc = generate_maze(self.size, self.difficulty, self.num_agent)
-            _cf = [check_feasibility(maze, ag_loc[idx]) for idx in range(self.num_agent)]
+            maze_zip, ag_loc, start_loc, goal_loc = generate_maze(self.size, self.difficulty, self.num_agent)
+            _cf = [check_feasibility(maze_zip[idx], ag_loc[idx]) for idx in range(self.num_agent)]
 
-        self.maze = maze
+        self.maze = maze_zip
         self.ag_loc = ag_loc
         self.start_loc = start_loc
         self.goal_loc = goal_loc
 
-        # self.base_graph = self.generate_base_graph_loc(maze)
-        # ret_maze = self.convert_maze_to_g_loc()
+        self.base_graph = [self.generate_base_graph_loc(maze) for maze in self.maze]
+        ret_g = [self.convert_maze_to_g_loc(i) for i in range(self.num_agent)]
 
         state = copy(self.maze)
-        ret_mask = [get_mask(state, self.ag_loc[idx]) for idx in range(self.num_agent)]
+        ret_mask = [get_mask(state[idx], self.ag_loc[idx]) for idx in range(self.num_agent)]
 
-        return ret_mask
+        return ret_g, ret_mask
 
     def step(self, action):
         self.t += 1
@@ -77,38 +77,36 @@ class maze_env:
 
         return g, reward, mask, terminated
 
-    def multi_step(self, actions):  # action should be joint action form
-        self.t += 1
-        moves = np.array([move[a] for a in actions])
-        self.ag_loc = np.array(self.ag_loc) + moves
-        state = copy(self.maze)
-        terminated = [False for _ in range(self.num_agent)]
-        reward = -1
-
-        grid_type = [state[tuple(agl)] for agl in self.ag_loc]
-        for g in range(self.num_agent):
-            if grid_type[g] == self.cell_type['goal']:
-                terminated[g] = True
-        if all(terminated):
-            reward = 10
-        else:
-            nearby_bool = [None for _ in range(self.num_agent)]
-            nearby_goal = [np.abs(self.goal_loc - agl).sum() for agl in self.ag_loc]
-            for n in range(self.num_agent):
-                if nearby_goal[n] < 4:
-                    nearby_bool
-            if np.abs(self.goal_loc - self.ag_loc).sum() < 4:
-                reward = 0
-            else:
-                pass
-
-        # g = self.convert_maze_to_g_loc()
-
-        if self.t > self.T:
-            terminated = True
-        mask = get_mask(state, self.ag_loc)
-
-        return g, reward, mask, terminated
+    # def multi_step(self, actions):  # action should be joint action form
+    #     self.t += 1
+    #     moves = np.array([move[a] for a in actions])
+    #     self.ag_loc = np.array(self.ag_loc) + moves
+    #     state = copy(self.maze)
+    #     terminated = [False for _ in range(self.num_agent)]
+    #     reward = -1
+    #
+    #     grid_type = [state[tuple(agl)] for agl in self.ag_loc]
+    #     for g in range(self.num_agent):
+    #         if grid_type[g] == self.cell_type['goal']:
+    #             terminated[g] = True
+    #     if all(terminated):
+    #         reward = 10
+    #     else:
+    #         nearby_bool = [None for _ in range(self.num_agent)]
+    #         nearby_goal = [np.abs(self.goal_loc - agl).sum() for agl in self.ag_loc]
+    #
+    #         if np.abs(self.goal_loc - self.ag_loc).sum() < 4:
+    #             reward = 0
+    #         else:
+    #             pass
+    #
+    #     g = self.convert_maze_to_g_loc()
+    #
+    #     if self.t > self.T:
+    #         terminated = True
+    #     mask = get_mask(state, self.ag_loc)
+    #
+    #     return g, reward, mask, terminated
 
     def generate_base_graph_loc(self, maze):
         g = dgl.DGLGraph()
@@ -130,8 +128,8 @@ class maze_env:
 
         return g
 
-    def convert_maze_to_g_loc(self):
-        g = deepcopy(self.base_graph)
+    def convert_maze_to_g_loc(self, i):
+        g = deepcopy(self.base_graph[i])
         g.add_nodes(1)
         n_nodes = g.number_of_nodes()
 
@@ -139,7 +137,7 @@ class maze_env:
         goal_type = GOAL
         ag_type = AGENT
 
-        g.ndata['init_nf'][-1] = torch.Tensor(self.ag_loc) / self.size
+        g.ndata['init_nf'][-1] = torch.Tensor(self.ag_loc[i]) / self.size
         g.ndata['type'] = torch.Tensor([obs_type] * (n_nodes - 2) + [goal_type] + [ag_type]).reshape(-1, 1)
 
         g.add_edges(range(n_nodes), n_nodes - 1)
@@ -154,21 +152,26 @@ def generate_maze(size, difficulty, num_agent):
     maze = np.zeros((size, size))
     obstacle = np.random.random((size, size)) < difficulty
     maze[obstacle] = OBSTACLE
+    maze_zip = [copy(maze) for _ in range(num_agent)]  # 공유되는 벽 정보만 포함하는 미로 여러개 생성
 
-    s_g_idx = np.random.choice(list(range(size ** 2)), num_agent + 1, replace=False)
+    s_g_idx = np.random.choice(list(range(size ** 2)), num_agent * 2, replace=False)
     entire_loc = [[i, j] for i in range(size) for j in range(size)]
 
     ag_loc = [[] for _ in range(num_agent)]
-    for n in range(num_agent):
-        ag_loc[n] = entire_loc[s_g_idx[n]]
+    goal_loc = [[] for _ in range(num_agent)]
+
+    for a in range(num_agent):
+        ag_loc[a] = entire_loc[s_g_idx[a]]
     start_loc = ag_loc
-    goal_loc = entire_loc[s_g_idx[-1]]
+    for g in range(num_agent):
+        goal_loc[g] = entire_loc[s_g_idx[g - num_agent]]
 
-    for i in range(num_agent):
-        maze[tuple(ag_loc[i])] = EMPTY
-    maze[tuple(goal_loc)] = GOAL
+    for a in range(num_agent):
+        maze_zip[a][tuple(ag_loc[a])] = EMPTY
+    for g in range(num_agent):
+        maze_zip[g][tuple(goal_loc[g])] = GOAL
 
-    return maze, ag_loc, start_loc, goal_loc
+    return maze_zip, ag_loc, start_loc, goal_loc
 
 
 def get_mask(maze, loc):
