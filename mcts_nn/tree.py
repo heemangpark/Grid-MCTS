@@ -2,7 +2,6 @@ import networkx as nx
 
 from env.maze_func import get_avail_action
 from mcts_nn.tree_functions import mask4tree, expand, children, select, backup
-from utils.visualize import vis_route
 
 
 class Tree:
@@ -11,7 +10,7 @@ class Tree:
         self.agent = agent
         self.args = env.args
         self.g = nx.DiGraph()
-        self.g.add_node(1, state=self.env.start_loc, N=1)
+        self.g.add_node(1, state=self.env.start_loc, visited=1, Q=0)
         self.state_seq, self.act_seq = None, None
 
     def grow(self):
@@ -49,6 +48,9 @@ class Tree:
                 backup(self.g, leaf, leaf_r, leaf_q)
 
             step += 1
-            """visualize per step"""
-            if step % 50 == 0:
-                vis_route(self.env.maze, self.state_seq, self.env.start_loc, self.env.goal_loc, step)
+            if step >= 500:
+                break
+
+            # """visualize per step"""
+            # if step % 50 == 0:
+            #     vis_route(self.env.maze, self.state_seq, self.env.start_loc, self.env.goal_loc, step)

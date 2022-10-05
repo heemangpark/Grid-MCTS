@@ -153,8 +153,8 @@ def generate_maze(size, difficulty):
     maze[obstacle] = OBSTACLE
 
     rand_loc = np.random.choice(size, 4)
-    if rand_loc[0] == rand_loc[2] and rand_loc[1] == rand_loc[3]:
-        while not rand_loc[0] == rand_loc[2] and rand_loc[1] == rand_loc[3]:
+    if all(rand_loc[:2] == rand_loc[-2:]):
+        while not all(rand_loc[:2] == rand_loc[-2:]):
             rand_loc = np.random.choice(size, 4)
 
     ag_loc = rand_loc[:2]
