@@ -14,7 +14,7 @@ from utils.arguments import maze_args
 def main(args, rand=False):
     # wandb.init(project='IoT', entity='heemang')
     # wandb.init(project="etri", entity="curie_ahn", config=args)
-    agent = QAgent(in_dim=2, embedding_dim=64)
+    agent = QAgent(in_dim=2)
     agent.to(agent.device)
     env = maze_env(args)
 

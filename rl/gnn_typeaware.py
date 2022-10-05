@@ -70,10 +70,15 @@ class GNNLayer_typeaware(nn.Module):
         ef_in = torch.concat([src_nf, dst_nf, ef], -1)
         msg = self.edge_update[str(etype)](ef_in)
 
-        return {'msg{}'.format(etype): msg}
+        return {'msg{}'.format(etype): msg, 'ef': ef}
 
     def reduce_func(self, nodes, etype):
         agg_msg = nodes.mailbox['msg{}'.format(etype)]
+        ef = nodes.mailbox['ef'] + 1e-5
+
+        ef_weight = 1 / ef
+        normalized_weight = ef_weight / ef_weight.sum(1, keepdims=True)
+        agg_msg = agg_msg * normalized_weight
 
         return {'agg{}'.format(etype): agg_msg.sum(1)}
 

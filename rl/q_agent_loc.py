@@ -9,7 +9,7 @@ from rl.replaymemory import ReplayMemory
 
 
 class QAgent(nn.Module):
-    def __init__(self, in_dim, embedding_dim):
+    def __init__(self, in_dim=2, embedding_dim=128):
         super(QAgent, self).__init__()
         self.q = None
 
