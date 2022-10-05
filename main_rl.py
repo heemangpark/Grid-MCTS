@@ -11,7 +11,7 @@ from utils.arguments import maze_args
 # from tqdm import tqdm
 
 
-def main(args, rand=False):
+def main(args, rand=False, exp_name='temp'):
     # wandb.init(project='IoT', entity='heemang')
     # wandb.init(project="etri", entity="curie_ahn", config=args)
     agent = QAgent(in_dim=2)
@@ -43,8 +43,9 @@ def main(args, rand=False):
                 break
 
         if e % 1000 == 0 and e > 0:
-            torch.save(agent.state_dict(), './saved/grid_{}_{}.th'.format(args['size'], e))
+            torch.save(agent.state_dict(), './saved/grid_{}_{}.th'.format(exp_name, e))
 
 
 if __name__ == '__main__':
-    main(maze_args, rand=False)
+    exp_name = 'rand'
+    main(maze_args, rand=True, exp_name=exp_name)
