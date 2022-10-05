@@ -56,7 +56,7 @@ class QAgent(nn.Module):
                     action = q.argmax(-1)
                     self.q = q
 
-            self.epsilon = max(0.05, self.epsilon - 0.000003)
+                self.epsilon = max(0.05, self.epsilon - 0.000003)
 
         return action.item()
 
