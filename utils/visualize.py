@@ -52,8 +52,8 @@ def vis_route(maze, seq, start, goal, id=0):
 
     plot_seq = np.array(np.row_stack((start, seq))) + .5
     ax.plot(plot_seq[:, 0], plot_seq[:, 1], linewidth=2, color='k')
-    ax.plot(start[0] + .5, start[1] + .5, marker='o', markersize=7.5, color='yellow')
-    ax.plot(goal[0] + .5, goal[1] + .5, marker='*', markersize=15, color='yellow')
+    ax.plot(start[0] + .5, start[1] + .5, marker='o', markersize=200 / size, color='yellow')
+    ax.plot(goal[0] + .5, goal[1] + .5, marker='*', markersize=200 / size, color='yellow')
     fig.savefig('res_{}.png'.format(id), bbox_inches='tight', pad_inches=0.1)
 
 
@@ -102,8 +102,14 @@ def vis_map_only(maze, start, goal, id=0):
             facecolor='blue',
             fill=True
         ))
-    ax.plot(start[0] + .5, start[1] + .5, marker='o', markersize=7.5, color='yellow')
-    ax.plot(goal[0] + .5, goal[1] + .5, marker='*', markersize=15, color='yellow')
+    ax.plot(start[0] + .5, start[1] + .5, marker='o', markersize=200 / size, color='yellow')
+    ax.plot(goal[0] + .5, goal[1] + .5, marker='*', markersize=200 / size, color='yellow')
+    # ax.grid(False)
+    # ax.set_xticks([])
+    # ax.set_yticks([])
+    # plt.grid(False)
+    # ax.axis('off')
+
     fig.tight_layout()
     fig.savefig('maze_{}.png'.format(id), bbox_inches='tight', pad_inches=0.1)
 
@@ -160,6 +166,6 @@ def vis_route_total(maze, seq, start, goal, id=0):
         plot_seq.append(np.array(np.row_stack((start[s], seq[s]))) + .5)
     for p in range(len(maze)):
         ax.plot(plot_seq[p][:, 0], plot_seq[p][:, 1], linewidth=2, color='k')
-        ax.plot(start[p][0] + .5, start[p][1] + .5, marker='o', markersize=7.5, color='yellow')
-        ax.plot(goal[p][0] + .5, goal[p][1] + .5, marker='*', markersize=15, color='yellow')
+        ax.plot(start[p][0] + .5, start[p][1] + .5, marker='o', markersize=200 / size, color='yellow')
+        ax.plot(goal[p][0] + .5, goal[p][1] + .5, marker='*', markersize=200 / size, color='yellow')
     fig.savefig('res_{}.png'.format(id), bbox_inches='tight', pad_inches=0.1)
