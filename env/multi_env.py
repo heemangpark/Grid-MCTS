@@ -166,7 +166,8 @@ def generate_maze(size, difficulty, num_agent):
         goal_loc[g] = entire_loc[s_g_idx[g - num_agent]]
 
     for a in range(num_agent):
-        maze_zip[a][tuple(ag_loc[a])] = EMPTY
+        for maze in maze_zip:
+            maze[tuple(ag_loc[a])] = EMPTY
     for g in range(num_agent):
         maze_zip[g][tuple(goal_loc[g])] = GOAL
 
