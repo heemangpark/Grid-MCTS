@@ -1,4 +1,5 @@
 .idea/
+.ipynb_checkpoints/
 __pycache__/
 saved/
 tree/
@@ -6,4 +7,3 @@ wandb/
 
 *.png
 *.ipynb
-.ipynb_checkpoints/

@@ -1,19 +1,30 @@
-from env.maze_func import transition_loc
 from itertools import product
+
+from env.maze_func import transition_loc
 from mcts_nn.tree_functions import parent
 
 
-def expand_joint(graph, idx, joint_avail_actions):
+def expand_joint(graph, idx, joint_avail_actions, tree_type='vanilla'):
     leaves = []
     for joint_action in product(*joint_avail_actions):
         next_joint_state = []
         for i, a in enumerate(joint_action):
             next_state = transition_loc(graph.nodes[idx]['state'][i], a)
             next_joint_state.append(list(next_state))
-        new_child_idx = len(graph) + 1
-        leaves.append(new_child_idx)
-        graph.add_node(new_child_idx, state=next_joint_state, visited=0, Q=0)
-        graph.add_edge(idx, len(graph), a=[['up', 'down', 'left', 'right', 't'][action] for action in joint_action])
+        if tree_type == 'vanilla':
+            new_child_idx = len(graph) + 1
+            leaves.append(new_child_idx)
+            graph.add_node(new_child_idx, state=next_joint_state, visited=0, Q=0)
+            graph.add_edge(idx, len(graph), a=[['up', 'down', 'left', 'right', 't'][action] for action in joint_action])
+        elif tree_type == 'grand':
+            if all(next_joint_state == graph.nodes[parent(graph, idx)]['state']):
+                pass
+            else:
+                new_child_idx = len(graph) + 1
+                leaves.append(new_child_idx)
+                graph.add_node(new_child_idx, state=next_joint_state, visited=0, Q=0)
+                graph.add_edge(idx, len(graph),
+                               a=[['up', 'down', 'left', 'right', 't'][action] for action in joint_action])
     return leaves
 
 

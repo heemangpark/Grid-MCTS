@@ -33,32 +33,38 @@ def mask4tree(maze, loc):
 def children(graph, idx): return list(graph.successors(idx))
 
 
-def parent(graph, idx): return list(graph.predecessors(idx))[0]
+def parent(graph, idx):
+    return 1 if idx == 1 else list(graph.predecessors(idx))[0]
 
 
 def select(graph, root_idx, c=2):
-    # score = [(graph.edges[edge_idx]['R']) + c * np.sqrt(
-    #     np.log(graph.nodes[root_idx]['N'] + 1e-4) / (graph.edges[edge_idx]['n'] + 1)) for edge_idx in
-    #          list(graph.edges(root_idx))]
     UCT = [graph.nodes[child_idx]['Q'] + c * np.sqrt(
         np.log(graph.nodes[root_idx]['visited']) / (graph.nodes[child_idx]['visited'])) for child_idx in
            children(graph, root_idx)]
-    # if np.var(UCT) == 0:
-    #     best_child = np.random.choice(children(graph, root_idx))
-    # else:
     best_child = children(graph, root_idx)[np.argmax(UCT)]
     best_action = graph.edges[root_idx, best_child]['a']
     return best_child, best_action
 
 
-def expand(graph, idx, avail_actions):
+def expand(graph, idx, avail_actions, tree_type='vanilla'):
     leaves = []
     for a in avail_actions:
         next_state = transition_loc(graph.nodes[idx]['state'], a)
-        new_child_idx = len(graph) + 1
-        leaves.append(new_child_idx)
-        graph.add_node(new_child_idx, state=next_state, visited=0, Q=0)
-        graph.add_edge(idx, len(graph), a=['up', 'down', 'left', 'right'][a])
+        if tree_type == 'vanilla':
+            new_child_idx = len(graph) + 1
+            leaves.append(new_child_idx)
+            graph.add_node(new_child_idx, state=next_state, visited=0, Q=0)
+            graph.add_edge(idx, len(graph), a=['up', 'down', 'left', 'right'][a])
+        elif tree_type == 'grand':
+            if all(next_state == graph.nodes[parent(graph, idx)]['state']):
+                pass
+            else:
+                new_child_idx = len(graph) + 1
+                leaves.append(new_child_idx)
+                graph.add_node(new_child_idx, state=next_state, visited=0, Q=0)
+                graph.add_edge(idx, len(graph), a=['up', 'down', 'left', 'right'][a])
+        else:
+            raise NotImplementedError
     return leaves
 
 

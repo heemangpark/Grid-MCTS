@@ -6,14 +6,16 @@ from mcts.tree_functions import expand, children, select, backup
 
 
 class Tree:
-    def __init__(self, env):
+    def __init__(self, env, max_step):
         self.goal = env.goal_loc
         self.maze = env.maze
         self.g = nx.DiGraph()
-        self.g.add_node(1, state=env.start_loc, N=1)
+        self.g.add_node(1, state=env.start_loc, visited=1, Q=0)
         self.state_seq, self.act_seq = None, None
+        self.max_step = max_step
 
     def grow(self):
+        step = 0
         while True:
             idx = 1
             state_seq = []
@@ -37,13 +39,17 @@ class Tree:
 
             """expansion"""
             curr_state = self.g.nodes[idx]['state']
-            leaves = expand(self.g, idx, avail_actions=get_avail_action(self.maze, curr_state))
+            leaves = expand(self.g, idx, avail_actions=get_avail_action(self.maze, curr_state), tree_type='grand')
 
             """backup"""
             for leaf in leaves:
-                leaf_r = 1000 if self.maze[tuple(self.g.nodes[leaf]['state'])] == 2 else distance_score(
+                leaf_r = 10 if self.maze[tuple(self.g.nodes[leaf]['state'])] == 2 else distance_score(
                     self.g.nodes[leaf]['state'], self.goal)
                 backup(self.goal, self.g, leaf, leaf_r)
+
+            step += 1
+            if step > self.max_step:
+                break
 
 
 def distance_score(loc1, loc2):
