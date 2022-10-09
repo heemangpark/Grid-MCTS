@@ -7,11 +7,11 @@ from utils.arguments import maze_args
 from utils.visualize import vis_route, vis_route_total
 
 if __name__ == "__main__":
-    for id in range(5):
-        n_ag = 3
+    for id in range(1):
+        n_ag = 2
         env = maze_env(maze_args, n_ag)
         env.size = 20
-        max_step = 100
+        max_step = 1000
 
         agent = QAgent()
         agent.load_state_dict(torch.load('./sacred/rand_best.th', 'cuda'))

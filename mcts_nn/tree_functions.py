@@ -56,7 +56,7 @@ def expand(graph, idx, avail_actions, tree_type='vanilla'):
             graph.add_node(new_child_idx, state=next_state, visited=0, Q=0)
             graph.add_edge(idx, len(graph), a=['up', 'down', 'left', 'right'][a])
         elif tree_type == 'grand':
-            if all(next_state == graph.nodes[parent(graph, idx)]['state']):
+            if all([next_state[i] == graph.nodes[parent(graph, idx)]['state'][i] for i in range(2)]):
                 pass
             else:
                 new_child_idx = len(graph) + 1
@@ -75,10 +75,6 @@ def backup(graph, leaf_idx, r_value, q_value):
         graph.nodes[parent_idx]['visited'] += 1
         graph.nodes[leaf_idx]['visited'] += 1
         graph.nodes[leaf_idx]['Q'] += (r_value + q_value.max() * 0.99 ** hop) / graph.nodes[leaf_idx]['visited']
-        # graph.edges[parent_idx, leaf_idx]['R'] += q_value.mean() * 0.99 ** hop
-        # graph.edges[parent_idx, leaf_idx]['n'] += 1
-        # graph.edges[parent_idx, leaf_idx]['Q'] = graph.edges[parent_idx, leaf_idx]['R'] / \
-        #                                          graph.edges[parent_idx, leaf_idx]['n']
         leaf_idx = parent_idx
         hop += 1
         if leaf_idx == 1:

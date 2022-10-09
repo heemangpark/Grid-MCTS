@@ -17,7 +17,9 @@ def expand_joint(graph, idx, joint_avail_actions, tree_type='vanilla'):
             graph.add_node(new_child_idx, state=next_joint_state, visited=0, Q=0)
             graph.add_edge(idx, len(graph), a=[['up', 'down', 'left', 'right', 't'][action] for action in joint_action])
         elif tree_type == 'grand':
-            if all(next_joint_state == graph.nodes[parent(graph, idx)]['state']):
+            check_bool = [next_joint_state[i] == graph.nodes[parent(graph, idx)]['state'][i] for i in
+                          range(len(next_joint_state))]
+            if any(check_bool):
                 pass
             else:
                 new_child_idx = len(graph) + 1
@@ -34,14 +36,13 @@ def backup(graph, leaf_idx, r_value, leaf_maxq):
         parent_idx = parent(graph, leaf_idx)
         graph.nodes[parent_idx]['visited'] += 1
         graph.nodes[leaf_idx]['visited'] += 1
-        graph.nodes[leaf_idx]['Q'] += (r_value + leaf_maxq.max() * 0.99 ** hop) / graph.nodes[leaf_idx]['visited']
-        # graph.edges[parent_idx, leaf_idx]['R'] += q_value.mean() * 0.99 ** hop
-        # graph.edges[parent_idx, leaf_idx]['n'] += 1
-        # graph.edges[parent_idx, leaf_idx]['Q'] = graph.edges[parent_idx, leaf_idx]['R'] / \
-        #                                          graph.edges[parent_idx, leaf_idx]['n']
+        graph.nodes[leaf_idx]['Q'] += (r_value + leaf_maxq) * 0.99 ** hop
+        # graph.nodes[leaf_idx]['Q'] += (r_value + leaf_maxq) * 0.99 ** hop / graph.nodes[leaf_idx]['visited']
         leaf_idx = parent_idx
         hop += 1
+
         if leaf_idx == 1:
             graph.nodes[leaf_idx]['visited'] += 1
-            graph.nodes[leaf_idx]['Q'] += (r_value + leaf_maxq.max() * 0.99 ** hop) / graph.nodes[leaf_idx]['visited']
+            graph.nodes[leaf_idx]['Q'] += (r_value + leaf_maxq) * 0.99 ** hop
+            # graph.nodes[leaf_idx]['Q'] += (r_value + leaf_maxq) * 0.99 ** hop / graph.nodes[leaf_idx]['visited']
             break

@@ -25,7 +25,7 @@ class MultiTree:
 
             """selection"""
             while len(children(self.g, idx)) != 0:
-                idx, a = select(self.g, idx, c=10)
+                idx, a = select(self.g, idx, c=2)
                 act_seq.append(a)
                 curr_state = list(self.g.nodes[idx]['state'])
                 state_seq.append(curr_state)
@@ -35,7 +35,6 @@ class MultiTree:
 
             """terminal check on selected leaf"""
             if self.env.goal_loc == self.g.nodes[idx]['state']:
-                print()
                 break
             else:
                 pass
@@ -43,12 +42,14 @@ class MultiTree:
             """expansion"""
             curr_state = self.g.nodes[idx]['state']
             joint_avail_actions = [get_avail_action(self.env.maze[i], curr_state[i]) for i in range(self.n_ag)]
-            leaves = expand_joint(self.g, idx, joint_avail_actions)
+            leaves = expand_joint(self.g, idx, joint_avail_actions, tree_type='grand')
 
             """backup"""
             for leaf in leaves:
                 self.env.ag_loc = self.g.nodes[leaf]['state']
-                dist_to_goal = abs(np.array(self.env.ag_loc) - np.array(self.env.goal_loc)).sum()
+                'manhattan distance threshold ?'
+                manhattan = [(abs(np.array(self.env.ag_loc) - np.array(self.env.goal_loc)))[i].sum() for i in
+                             range(self.n_ag)]
                 temp_maze = np.zeros((self.env.size, self.env.size))
                 penalty = 0
                 for loc in self.env.ag_loc:
@@ -56,11 +57,10 @@ class MultiTree:
                         penalty = -10
                         break
                     temp_maze[tuple(loc)] = 1
-
-                if dist_to_goal == 0:
+                if np.array(manhattan).sum() == 0:
                     leaf_r = 10
-                elif dist_to_goal == 1:
-                    leaf_r = 0
+                elif all([manhattan[i] <= self.env.size for i in range(self.n_ag)]):
+                    leaf_r = 1
                 else:
                     leaf_r = -1
 
@@ -68,8 +68,8 @@ class MultiTree:
 
                 joint_masks = [mask4tree(m, l) for m, l in zip(self.env.maze, self.env.ag_loc)]
                 leaf_maxq = sum(
-                    [self.agent.step(self.env.convert_maze_to_g_loc(i), joint_masks[i], tree_search=True).max() for
-                     i in range(self.n_ag)]) / self.n_ag
+                    [self.agent.step(self.env.convert_maze_to_g_loc(i), joint_masks[i], tree_search=True).max() for i in
+                     range(self.n_ag)]) / self.n_ag
                 backup(self.g, leaf, leaf_r, leaf_maxq)
 
             step += 1

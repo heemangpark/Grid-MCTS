@@ -12,12 +12,11 @@ from utils.visualize import vis_route
 def runner(iterations, maze_size, max_step):
     env = maze_env(maze_args)
     env.size = maze_size
-    max_step = max_step
     for id in range(iterations):
         agent = QAgent()
         agent.load_state_dict(torch.load('./sacred/rand_best.th', 'cuda'))
 
-        g, mask = env.reset()
+        _, _ = env.reset()
         tree = Tree(env, agent)
         tree.grow(max_step=max_step)
 
@@ -31,7 +30,7 @@ def loader(load_id):
 
 
 if __name__ == "__main__":
-    runner(iterations=5, maze_size=50, max_step=10000)
+    runner(iterations=5, maze_size=30, max_step=500)
     # loaded_model = loader(1)
     # loaded_tree = loaded_model.g
     print("")
