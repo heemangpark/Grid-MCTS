@@ -44,6 +44,10 @@ class MultiTree:
             joint_avail_actions = [get_avail_action(self.env.maze[i], curr_state[i]) for i in range(self.n_ag)]
             leaves = expand_joint(self.g, idx, joint_avail_actions, tree_type='grand')
 
+            if len(leaves) == 0:
+                # TODO: how to backup:
+                backup(self.g, idx, 0, 0)
+
             """backup"""
             for leaf in leaves:
                 self.env.ag_loc = self.g.nodes[leaf]['state']
@@ -58,11 +62,11 @@ class MultiTree:
                         break
                     temp_maze[tuple(loc)] = 1
                 if np.array(manhattan).sum() == 0:
-                    leaf_r = 10
-                elif all([manhattan[i] <= self.env.size for i in range(self.n_ag)]):
                     leaf_r = 1
+                # elif all([manhattan[i] <= self.env.size for i in range(self.n_ag)]):
+                #     leaf_r = 1
                 else:
-                    leaf_r = -1
+                    leaf_r = 0
 
                 leaf_r += penalty
 

@@ -19,9 +19,7 @@ def expand_joint(graph, idx, joint_avail_actions, tree_type='vanilla'):
         elif tree_type == 'grand':
             check_bool = [next_joint_state[i] == graph.nodes[parent(graph, idx)]['state'][i] for i in
                           range(len(next_joint_state))]
-            if any(check_bool):
-                pass
-            else:
+            if not any(check_bool):
                 new_child_idx = len(graph) + 1
                 leaves.append(new_child_idx)
                 graph.add_node(new_child_idx, state=next_joint_state, visited=0, Q=0)
