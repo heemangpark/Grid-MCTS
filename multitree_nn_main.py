@@ -1,5 +1,3 @@
-import networkx as nx
-import numpy as np
 import torch
 
 from env.multi_env import maze_env
@@ -12,8 +10,8 @@ if __name__ == "__main__":
     for id in range(1):
         n_ag = 2
         env = maze_env(maze_args, n_ag)
-        env.size = 10
-        max_step = 100
+        env.size = 20
+        max_step = 1000
 
         agent = QAgent()
         agent.load_state_dict(torch.load('./sacred/rand_best.th', 'cuda'))
@@ -26,8 +24,7 @@ if __name__ == "__main__":
         for i in range(n_ag):
             individual_seq = [s[i] for s in tree.state_seq]
             seq.append(individual_seq)
-            vis_route(env.maze[i], individual_seq, env.start_loc[i], env.goal_loc[i], 'tree_ag{}_{}'.format(i, id + 1))
+            vis_route(env.maze[i], individual_seq, env.start_loc[i], env.goal_loc[i],
+                      'multi_tree_{}_{}'.format(i, id + 1))
 
-        vis_route_total(env.maze, seq, env.start_loc, env.goal_loc, 'tree_total')
-    # nx.write_gpickle(tree, './tree/tree.nx')
-    # np.save('./tree/route', np.array(tree.act_seq))
+        vis_route_total(env.maze, seq, env.start_loc, env.goal_loc, 'multi_tree_total')
