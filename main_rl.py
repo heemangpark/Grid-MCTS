@@ -45,7 +45,7 @@ def main(args, rand=False, exp_name='temp'):
             torch.save(agent.state_dict(), './saved/grid_{}_{}.th'.format(exp_name, e))
             # evaluation
             temp_eval_e = 0
-            for _ in range(100):
+            for _ in range(10):
                 g, mask = env.reset(size=20)
                 R = 0
                 while True:
@@ -55,10 +55,10 @@ def main(args, rand=False, exp_name='temp'):
                     if t:
                         temp_eval_e += R
                         break
-            temp_eval_e /= 100
+            temp_eval_e /= 10
             if temp_eval_e > best_r:
                 best_r = temp_eval_e
-                torch.save(agent.state_dict(), './saved/{}_best.th'.format(exp_name))
+                torch.save(agent.state_dict(), './saved/{}_best_{}.th'.format(exp_name, round(best_r * 100)))
 
 
 if __name__ == '__main__':
