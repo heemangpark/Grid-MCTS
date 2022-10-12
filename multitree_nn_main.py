@@ -6,26 +6,29 @@ from rl.q_agent_loc import QAgent
 from utils.arguments import maze_args
 from utils.visualize import vis_route, vis_route_total
 
-if __name__ == "__main__":
-    for id in range(1):
-        n_ag = 1
-        env = maze_env(maze_args, n_ag)
-        env.size = 20
-        env.difficulty = .5
-        max_step = 1000
 
-        agent = QAgent()
-        agent.load_state_dict(torch.load('./sacred/grid_rand_binaryrwd.th', 'cuda'))
+def runner(iterations, n_ag, maze_size, max_step):
+    env = maze_env(maze_args, n_ag)
+    env.size = maze_size
 
-        g, mask = env.reset()
+    agent = QAgent()
+    agent.load_state_dict(torch.load('./sacred/grid_rand_binaryrwd.th', 'cuda'))
+
+    for id in range(iterations):
+        "tree search"
+        _, _ = env.reset()
         tree = MultiTree(env, agent, n_ag)
-        tree.grow(max_step=max_step)
+        tree.grow(max_step)
 
-        seq = []
+        "visualize"
+        total_seq = []
         for i in range(n_ag):
             individual_seq = [s[i] for s in tree.state_seq]
-            seq.append(individual_seq)
+            total_seq.append(individual_seq)
             vis_route(env.maze[i], individual_seq, env.start_loc[i], env.goal_loc[i],
-                      'multi_tree_{}_{}'.format(i, id + 1))
+                      'agent_{}_{}th'.format(i, id + 1))
+        vis_route_total(env.maze, total_seq, env.start_loc, env.goal_loc, 'total_{}th'.format(id + 1))
 
-        vis_route_total(env.maze, seq, env.start_loc, env.goal_loc, 'multi_tree_total')
+
+if __name__ == "__main__":
+    runner(3, 2, 10, 100)
