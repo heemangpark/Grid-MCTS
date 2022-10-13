@@ -4,6 +4,7 @@ import numpy as np
 from env.maze_func import get_avail_action
 from mcts_nn.tree_functions import mask4tree, children, select
 from mcts_nn.tree_functions_multi import expand_joint, backup
+from copy import copy, deepcopy
 
 
 class MultiTree:
@@ -12,7 +13,7 @@ class MultiTree:
         self.agent = agent
         self.args = env.args
         self.g = nx.DiGraph()
-        self.g.add_node(1, state=self.env.start_loc, visited=1, Q=0)
+        self.g.add_node(1, state=self.env.start_loc, visited=1, Q=0, maze=deepcopy(env.maze))
         self.state_seq, self.act_seq = None, None
         self.n_ag = n_ag
 
@@ -41,12 +42,13 @@ class MultiTree:
 
             """expansion"""
             curr_state = self.g.nodes[idx]['state']
-            joint_avail_actions = [get_avail_action(self.env.maze[i], curr_state[i]) for i in range(self.n_ag)]
+            curr_maze = self.g.nodes[idx]['maze']
+            joint_avail_actions = [get_avail_action(curr_maze[i], curr_state[i]) for i in range(self.n_ag)]
             leaves = expand_joint(self.g, idx, joint_avail_actions, tree_type='grand')
 
             if len(leaves) == 0:
                 # TODO: how to backup:
-                backup(self.g, idx, 0, 0)
+                backup(self.g, idx, -10, 0)
 
             """backup"""
             for leaf in leaves:
