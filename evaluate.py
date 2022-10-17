@@ -27,4 +27,4 @@ def evaluate(size, vis):
 if __name__ == "__main__":
     agent = QAgent(in_dim=2)
     agent.load_state_dict(torch.load('./sacred/grid_rand_binaryrwd.th', 'cuda'))
-    evaluate(size=20, vis=10)
+    evaluate(size=30, vis=5)

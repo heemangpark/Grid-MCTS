@@ -3,16 +3,11 @@ import numpy as np
 from env.maze_func import transition_loc
 
 
-def distance_score(loc1, loc2):
-    dist = -np.sqrt((loc1[0] - loc2[0]) ** 2 + (loc1[1] - loc2[1]) ** 2)
-    return 10 if dist > -1 else dist
-
-
 def mask4tree(maze, loc):
     mask = []
     size = maze.shape[0]
     move = np.array([[-1, 0], [1, 0], [0, -1], [0, 1]])
-    for a in [0, 1, 2, 3]:  # 상 하 좌 우
+    for a in [0, 1, 2, 3]:
         if (0 <= (loc + move[a])[0] < size) and (
                 0 <= (loc + move[a])[1] < size):
             if maze[tuple(loc + move[a])] == 0:
@@ -30,7 +25,8 @@ def mask4tree(maze, loc):
     return mask
 
 
-def children(graph, idx): return list(graph.successors(idx))
+def children(graph, idx):
+    return list(graph.successors(idx))
 
 
 def parent(graph, idx):
@@ -65,7 +61,11 @@ def expand(graph, idx, avail_actions, tree_type='vanilla'):
                 graph.add_edge(idx, len(graph), a=['up', 'down', 'left', 'right'][a])
         else:
             raise NotImplementedError
-    return leaves
+
+    if len(leaves) == 0:
+        return [parent(graph, idx)]
+    else:
+        return leaves
 
 
 def backup(graph, leaf_idx, r_value, q_value):
@@ -74,10 +74,14 @@ def backup(graph, leaf_idx, r_value, q_value):
         parent_idx = parent(graph, leaf_idx)
         graph.nodes[parent_idx]['visited'] += 1
         graph.nodes[leaf_idx]['visited'] += 1
-        graph.nodes[leaf_idx]['Q'] += (r_value + q_value.max() * 0.99 ** hop) / graph.nodes[leaf_idx]['visited']
+        # graph.nodes[leaf_idx]['Q'] += (r_value + q_value.max()) / 2
+        # graph.nodes[leaf_idx]['Q'] += (r_value + q_value.max()) * 0.99 ** hop
+        graph.nodes[leaf_idx]['Q'] += (r_value + q_value.max()) * 0.99 ** hop / graph.nodes[leaf_idx]['visited']
         leaf_idx = parent_idx
         hop += 1
         if leaf_idx == 1:
             graph.nodes[leaf_idx]['visited'] += 1
-            graph.nodes[leaf_idx]['Q'] += (r_value + q_value.max() * 0.99 ** hop) / graph.nodes[leaf_idx]['visited']
+            # graph.nodes[leaf_idx]['Q'] += (r_value + q_value.max()) / 2
+            # graph.nodes[leaf_idx]['Q'] += (r_value + q_value.max()) * 0.99 ** hop
+            graph.nodes[leaf_idx]['Q'] += (r_value + q_value.max()) * 0.99 ** hop / graph.nodes[leaf_idx]['visited']
             break
