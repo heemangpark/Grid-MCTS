@@ -5,8 +5,7 @@ import networkx as nx
 import numpy as np
 
 from env.maze_func import get_avail_action
-from mcts_nn.tree_functions import mask4tree, children, select
-from mcts_nn.tree_functions_multi import expand_joint, backup
+from mcts_nn.tree_functions_multi import mask4tree, children, select, expand_joint, backup
 
 
 class MultiTree:

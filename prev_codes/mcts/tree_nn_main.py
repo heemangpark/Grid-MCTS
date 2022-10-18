@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 from env.maze_env import maze_env
-from mcts_nn.tree import Tree
+from prev_codes.mcts.tree import Tree
 from rl.q_agent_loc import QAgent
 from utils.arguments import maze_args
 from utils.visualize import vis_route
