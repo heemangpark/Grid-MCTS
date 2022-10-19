@@ -4,8 +4,11 @@ import dgl
 import torch
 import torch.nn as nn
 
-from rl.gnn_typeaware import GNN_typeaware, filter_ag_nodes
+from rl.gnn_nodetypeaware import GNN_nodetypeaware, filter_nodes
 from rl.replaymemory import ReplayMemory
+from functools import partial
+
+filter_ag_nodes = partial(filter_nodes, ntype=3)
 
 
 class QAgent(nn.Module):
@@ -13,13 +16,13 @@ class QAgent(nn.Module):
         super(QAgent, self).__init__()
         self.q = None
 
-        self.gnn = GNN_typeaware(in_dim, out_dim=embedding_dim)
+        self.gnn = GNN_nodetypeaware(in_dim, out_dim=embedding_dim)
         self.q_func = nn.Sequential(nn.Linear(embedding_dim, embedding_dim),
                                     nn.ReLU(),
                                     nn.Linear(embedding_dim, 4)
                                     )
 
-        self.gnn_target = GNN_typeaware(in_dim, out_dim=embedding_dim)
+        self.gnn_target = GNN_nodetypeaware(in_dim, out_dim=embedding_dim)
         self.q_func_target = nn.Sequential(nn.Linear(embedding_dim, embedding_dim),
                                            nn.ReLU(),
                                            nn.Linear(embedding_dim, 4)
@@ -63,10 +66,7 @@ class QAgent(nn.Module):
     def compute_q(self, g):
         nf = g.ndata['init_nf']
         updated_nf = self.gnn(g, nf)
-        ag_nodes = g.filter_nodes(filter_ag_nodes)
-        ag_nf = updated_nf[ag_nodes]
-
-        qs = self.q_func(ag_nf)
+        qs = self.q_func(g, updated_nf)
 
         return qs
 

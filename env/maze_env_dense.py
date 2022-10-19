@@ -4,7 +4,7 @@ import dgl
 import numpy as np
 import torch
 
-from env.maze_func import UP, DOWN, LEFT, RIGHT, move
+from env.maze_func import UP, DOWN, LEFT, RIGHT, move, generate_dense_graph
 
 EMPTY = 0
 OBSTACLE = 1
@@ -39,13 +39,18 @@ class maze_env:
                 if check_feasibility(maze, ag_loc):
                     break
 
+        self.base_graph = generate_dense_graph(maze)
         self.maze = maze
-
-        self.base_graph, state = self.generate_base_graph_loc(maze), copy(self.maze)
-        ret_maze, ret_mask = self.convert_maze_to_g_loc(), get_mask(state, self.ag_loc)
+        self.ag_loc = ag_loc
+        self.start_loc = start_loc
+        self.goal_loc = goal_loc
 
         self.T = self.size * 4
-        return ret_maze, ret_mask
+
+        temp_maze = deepcopy(maze)
+        temp_maze[tuple(ag_loc)] = AGENT
+        ret_state = generate_dense_graph(temp_maze)
+        return ret_state, None
 
     def step(self, action):
         self.t += 1
@@ -67,48 +72,10 @@ class maze_env:
 
         if self.t > self.T:
             terminated = True
-        mask = get_mask(state, self.ag_loc)
+        mask = None
 
         return g, reward, mask, terminated
 
-    def generate_base_graph_loc(self, maze):
-        g = dgl.DGLGraph()
-
-        obs_type = self.cell_type['obstacle']
-        goal_type = self.cell_type['goal']
-        obstacle_x, obstacle_y = (maze == obs_type).nonzero()
-        goal_x, goal_y = (maze == goal_type).nonzero()
-
-        n_obstacle = len(obstacle_x)
-        g.add_nodes(n_obstacle + 1)
-
-        obstacle_nf = np.stack([obstacle_x, obstacle_y], -1)  # coordination of obstacles
-        goal_nf = np.stack([goal_x, goal_y], -1)  # coordination of goal
-
-        init_nf = np.concatenate([obstacle_nf, goal_nf], 0) / self.size
-        g.ndata['init_nf'] = torch.Tensor(init_nf)
-        g.ndata['type'] = torch.Tensor([obs_type] * n_obstacle + [goal_type]).reshape(-1, 1)
-
-        return g
-
-    def convert_maze_to_g_loc(self):
-        g = deepcopy(self.base_graph)
-        g.add_nodes(1)
-        n_nodes = g.number_of_nodes()
-
-        obs_type = OBSTACLE
-        goal_type = GOAL
-        ag_type = AGENT
-
-        g.ndata['init_nf'][-1] = torch.Tensor(self.ag_loc) / self.size
-        g.ndata['type'] = torch.Tensor([obs_type] * (n_nodes - 2) + [goal_type] + [ag_type]).reshape(-1, 1)
-
-        g.add_edges(range(n_nodes), n_nodes - 1)
-        loc_gap = (g.ndata['init_nf'] - g.ndata['init_nf'][-1]).abs()
-        g.edata['init_ef'] = loc_gap.sum(-1, keepdims=True)  # Manhattan distance
-        g.edata['type'] = torch.Tensor([obs_type] * (n_nodes - 2) + [goal_type] + [ag_type]).reshape(-1, 1)
-
-        return g
 
 
 def generate_maze(size, difficulty):
@@ -129,17 +96,18 @@ def generate_maze(size, difficulty):
     return maze, ag_loc, start_loc, goal_loc
 
 
-def get_mask(maze, maze_loc):
+def get_mask(maze, loc):
     size = maze.shape[0]
     mask = []
     for a in [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]:
-        if (0 <= list(maze_loc + move[a])[0] < size) and (
-                0 <= list(maze_loc + move[a])[1] < size):
-            if maze[tuple(maze_loc + move[a])] == EMPTY:
+        a = np.array(a)
+        if (0 <= list(loc + a)[0] < size) and (
+                0 <= list(loc + a)[1] < size):
+            if maze[tuple(loc + a)] == EMPTY:
                 m = False
-            elif maze[tuple(maze_loc + move[a])] == OBSTACLE:
+            elif maze[tuple(loc + a)] == OBSTACLE:
                 m = True
-            elif maze[tuple(maze_loc + move[a])] == GOAL:
+            elif maze[tuple(loc + a)] == GOAL:
                 m = False
             else:
                 m = None
@@ -162,7 +130,7 @@ def check_feasibility(maze, ag_loc):
     feasible = False
     while len(locs) > 0:
         temp_loc = locs.pop()
-        for a in ([0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]):
+        for a in [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]:
             new_loc = temp_loc + np.array(a)
             if all(new_loc >= 0) and all(new_loc < size):
                 if maze[tuple(new_loc)] == OBSTACLE:
@@ -190,7 +158,7 @@ if __name__ == '__main__':
     AGENT = 3
 
     env = maze_env(maze_args)
-    env.size = 5
+    env.size = 10
     env.difficulty = 0.5
     env.reset()
     vis_map_only(env.maze, env.ag_loc, env.goal_loc)
