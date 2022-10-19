@@ -1,10 +1,10 @@
 from copy import deepcopy
-from itertools import combinations
+from itertools import product, combinations
 
 import networkx as nx
 import numpy as np
 
-from env.maze_func import get_avail_action
+from env.maze_func import get_avail_action, transition_loc
 from mcts_nn.tree_functions_multi import mask4tree, children, select, expand_joint, backup
 
 
@@ -40,6 +40,23 @@ class MultiTree:
             curr_state = self.g.nodes[idx]['state']
             curr_maze = self.g.nodes[idx]['maze']
             joint_avail_actions = [get_avail_action(curr_maze[i], curr_state[i]) for i in range(self.n_ag)]
+            # flag = self.env.ag_loc
+            # joint_ag_loc = [[transition_loc(flag[q], p[q]) for q in range(self.n_ag)]
+            #                 for p in product(*joint_avail_actions)]
+            # check_best = []
+            # for m_ag in joint_ag_loc:
+            #     self.env.ag_loc = m_ag
+            #     joint_masks = [mask4tree(m, l) for m, l in zip(self.env.maze, self.env.ag_loc)]
+            #     check_best.append(sum([self.agent.step(self.env.convert_maze_to_g_loc(i), joint_masks[i], tree_search=True).max()
+            #                            for i in range(self.n_ag)]) / self.n_ag)
+            # act_list = [p for p in product(*joint_avail_actions)]
+            # for _ in range(3):
+            #     ba = list(act_list[np.argmax(check_best)])
+            #     best_action = [[b] for b in ba]
+            #     act_list.remove(tuple(ba))
+            #     if len(act_list) == 0:
+            #         break
+            #     leaves = expand_joint(self.g, idx, best_action)
             leaves = expand_joint(self.g, idx, joint_avail_actions)
 
             dead_end = any([len(joint_avail_actions[i]) == 0 for i in range(self.n_ag)])
@@ -51,6 +68,7 @@ class MultiTree:
                 backup(self.g, idx, -1, 0)
 
             """backup"""
+            # self.env.ag_loc = flag
             for leaf in leaves:
                 self.env.ag_loc = self.g.nodes[leaf]['state']
                 manhattan = [(abs(np.array(self.env.ag_loc) - np.array(self.env.goal_loc)))[i].sum()
